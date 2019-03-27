@@ -1,0 +1,4 @@
+# Ignore vscode files
+.vscode
+# Do not load the data
+data/

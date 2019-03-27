@@ -1,4 +1,6 @@
-# Ignore vscode files
+# VScode parameter files
 .vscode
-# Do not load the data
+# Data
 data/
+# Python cache
+__pycache__

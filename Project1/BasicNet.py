@@ -56,10 +56,12 @@ def train():
     train_target = train_target.type(torch.FloatTensor)
 
     # Define the mini_batch size
-    batch_size = 100
+    batch_size = 200
 
     # Create an instance of the network
     basicModel = BasicNet()
+    num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
+    print('Number of trainable parameters:',num_param)
 
     # Specify the loss function
     criterion = nn.MSELoss()
@@ -67,30 +69,31 @@ def train():
     # Define the number of epochs to train the network
     epochs = 25
     # Set the learning rate
-    eta = 0.1
+    eta = 0.0015
 
     for e in range(0, epochs):
         sum_loss = 0
         for b in range(0, train_input.size(0), batch_size):
             #print('input: ',train_input.narrow(0, b, batch_size))
             output = basicModel(train_input.narrow(0, b, batch_size))
-            print('output: ', output)
+            #print('output: ', output)
             loss = criterion(output, train_target.narrow(0, b, batch_size))
             sum_loss = sum_loss + loss.item()
             basicModel.zero_grad()
-            basicModel.parallel_net1.zero_grad()
+            """ basicModel.parallel_net1.zero_grad()
             basicModel.parallel_net2.zero_grad()
-            basicModel.analyser_net.zero_grad()
+            basicModel.analyser_net.zero_grad() """
             loss.backward()
             for p in basicModel.parameters():
                 p.data.sub_(eta * p.grad.data)
-            for p in basicModel.parallel_net1.parameters():
+            """ for p in basicModel.parallel_net1.parameters():
                 p.data.sub_(eta * p.grad.data)
             for p in basicModel.parallel_net2.parameters():
                 p.data.sub_(eta * p.grad.data)
             for p in basicModel.analyser_net.parameters():
-                p.data.sub_(eta * p.grad.data)
-        print('Sum of loss at epoch {}: '.format(e),sum_loss)
+                p.data.sub_(eta * p.grad.data) """
+        #return
+        print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     
     res = evaluate(basicModel,batch_size=batch_size)
     print('Error rate of BasicNet: ',res,'%')
@@ -100,19 +103,20 @@ def evaluate(model,batch_size=100):
     global test_input, test_target, test_classes
     test_target = test_target.type(torch.FloatTensor)
 
-    error = 0
-    for b in range(0, test_input.size(0), batch_size):
-        output = model(test_input.narrow(0, b, batch_size))
-        for i in range(output.size(0)):
-            print(output[i].item(),test_target.narrow(0, b, batch_size)[i].item())
-            if output[i].item() >= 0.5:
-                if test_target.narrow(0, b, batch_size)[i].item() < 0.2:
+    with torch.no_grad():
+        error = 0
+        for b in range(0, test_input.size(0), batch_size):
+            output = model(test_input.narrow(0, b, batch_size))
+            for i in range(output.size(0)):
+                #print(output[i].item(),test_target.narrow(0, b, batch_size)[i].item())
+                if output[i].item() >= 0.5:
+                    if test_target.narrow(0, b, batch_size)[i].item() < 0.2:
+                        error += 1
+                elif output[i].item() < 0.5:
+                    if test_target.narrow(0, b, batch_size)[i].item() > 0.8:
+                        error += 1
+                else:
                     error += 1
-            elif output[i].item() < 0.5:
-                if test_target.narrow(0, b, batch_size)[i].item() > 0.8:
-                    error += 1
-            else:
-                error += 1
     return error/test_target.size(0)*100
 
 

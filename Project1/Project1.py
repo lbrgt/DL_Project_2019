@@ -1,5 +1,7 @@
 # https://pytorch.org/tutorials/beginner/pytorch_with_examples.html
 
+#%%
+
 import torch
 from torch.autograd import Variable
 from torch import nn
@@ -21,7 +23,7 @@ class Parallel_Net(nn.Module):
     def sharedPass(self,x):
         x = F.relu(self.conv1(x))
         x = self.fc1(x.view(-1, 10*14*14))
-        return x 
+        return x     
 
     def forward(self, x):
         # Split the 2 input channels
@@ -55,14 +57,15 @@ mseLoss = nn.MSELoss()
 crossEnt = nn.CrossEntropyLoss()
 
 x0,x1 = model_parallel(train_input.narrow(0, 0, batch_size))
-x = torch.cat((x0.view(-1),x1.view(-1)))
+x = torch.cat((x0.view(100,-1),x1.view(100,-1)),dim=1)
+print(x.size())
 result = model_analyzer(x)
+print(result)
 
 
 
 
-
-
+#%%
 
 
 class Net(nn.Module):

@@ -133,8 +133,6 @@ print(x.size())
 result = model_analyzer(x)
 print(result)
 
-#MANGER DES BLIPBLOOPS
-
 
 #%%
 

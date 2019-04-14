@@ -32,22 +32,57 @@ class BasicNet(nn.Module):
     '''
     def __init__(self):
         super(BasicNet, self).__init__()
-        self.parallel_net1 = Parallel_Net()
-        self.parallel_net2 = Parallel_Net()
-        self.analyser_net  = Analyzer_Net()
+        # Image classifier A
+        self.conv1A = nn.Conv2d(1, 10, kernel_size=5, padding=0)  # 10x10x10
+        self.conv2A = nn.Conv2d(10, 20, kernel_size=5, padding=0) # 20x6x6
+        self.conv3A = nn.Conv2d(20, 30, kernel_size=5, padding=0) # 30x2x2 
+        self.fc1A = nn.Linear(30*2*2, 50) 
+        self.fc2A = nn.Linear(50, 25) 
+        self.fc3A = nn.Linear(25, 10) 
+
+        # Image classifier B
+        self.conv1B = nn.Conv2d(1, 10, kernel_size=5, padding=0)  # 10x10x10
+        self.conv2B = nn.Conv2d(10, 20, kernel_size=5, padding=0) # 20x6x6
+        self.conv3B = nn.Conv2d(20, 30, kernel_size=5, padding=0) # 30x2x2 
+        self.fc1B = nn.Linear(30*2*2, 50) 
+        self.fc2B = nn.Linear(50, 25) 
+        self.fc3B = nn.Linear(25, 10) 
+
+        # Analyzer net
+        self.a1 = nn.Linear(2*10, 15)
+        self.a2 = nn.Linear(15, 10)
+        self.a3 = nn.Linear(10, 5)
+        self.a4 = nn.Linear(5, 1) 
     
     def forward(self,x):
         # Split the 2 input channels
         x1 = x[:,0,:,:].view(-1,1,14,14)
         x2 = x[:,1,:,:].view(-1,1,14,14)
 
-        # No weight sharing (declare 2 distinct instances of Parallel_Net)
-        x1 = self.parallel_net1(x1)
-        x2 = self.parallel_net2(x2)
+        # Evaluate net A
+        x1 = F.relu(self.conv1A(x1))
+        x1 = F.relu(self.conv2A(x1))
+        x1 = F.relu(self.conv3A(x1))
+        x1 = F.relu(self.fc1A(x1.view(-1, 30*2*2)))
+        x1 = F.relu(self.fc2A(x1))
+        x1 = self.fc3A(x1)
+
+        # Evaluate net B
+        x2 = F.relu(self.conv1B(x2))
+        x2 = F.relu(self.conv2B(x2))
+        x2 = F.relu(self.conv3B(x2))
+        x2 = F.relu(self.fc1B(x2.view(-1, 30*2*2)))
+        x2 = F.relu(self.fc2B(x2))
+        x2 = self.fc3B(x2)
 
         # Concatenate back both classification results 
         x = torch.cat((x1.view(-1,10),x2.view(-1,10)),dim=1)
-        x = self.analyser_net(x)
+
+        # Evaluate the analyser
+        x = F.relu(self.a1(x))
+        x = F.relu(self.a2(x))
+        x = F.relu(self.a3(x))
+        x = self.a4(x)
 
         return x 
 
@@ -69,7 +104,7 @@ def train():
     # Define the number of epochs to train the network
     epochs = 100
     # Set the learning rate
-    eta = 0.0015
+    eta = 0.1
 
     for e in range(0, epochs):
         sum_loss = 0
@@ -80,18 +115,9 @@ def train():
             loss = criterion(output, train_target.narrow(0, b, batch_size))
             sum_loss = sum_loss + loss.item()
             basicModel.zero_grad()
-            """ basicModel.parallel_net1.zero_grad()
-            basicModel.parallel_net2.zero_grad()
-            basicModel.analyser_net.zero_grad() """
             loss.backward()
             for p in basicModel.parameters():
                 p.data.sub_(eta * p.grad.data)
-            """ for p in basicModel.parallel_net1.parameters():
-                p.data.sub_(eta * p.grad.data)
-            for p in basicModel.parallel_net2.parameters():
-                p.data.sub_(eta * p.grad.data)
-            for p in basicModel.analyser_net.parameters():
-                p.data.sub_(eta * p.grad.data) """
         #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     

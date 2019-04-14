@@ -24,7 +24,7 @@ from sub_modules import Parallel_Net,Analyzer_Net
 class BasicNet(nn.Module):
     '''
         Net caracteristics:
-            - No weight sharing
+            - Weight sharing
             - No intermediate loss
         
         Net input: Nx2x14x14
@@ -32,8 +32,7 @@ class BasicNet(nn.Module):
     '''
     def __init__(self):
         super(BasicNet, self).__init__()
-        self.parallel_net1 = Parallel_Net()
-        self.parallel_net2 = Parallel_Net()
+        self.parallel_net = Parallel_Net()
         self.analyser_net  = Analyzer_Net()
     
     def forward(self,x):
@@ -42,8 +41,8 @@ class BasicNet(nn.Module):
         x2 = x[:,1,:,:].view(-1,1,14,14)
 
         # No weight sharing (declare 2 distinct instances of Parallel_Net)
-        x1 = self.parallel_net1(x1)
-        x2 = self.parallel_net2(x2)
+        x1 = self.parallel_net(x1)
+        x2 = self.parallel_net(x2)
 
         # Concatenate back both classification results 
         x = torch.cat((x1.view(-1,10),x2.view(-1,10)),dim=1)
@@ -69,7 +68,7 @@ def train():
     # Define the number of epochs to train the network
     epochs = 100
     # Set the learning rate
-    eta = 0.0015
+    eta = 0.1
 
     for e in range(0, epochs):
         sum_loss = 0

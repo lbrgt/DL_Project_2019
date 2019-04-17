@@ -87,7 +87,7 @@ num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
 print('Number of trainable parameters:',num_param)  
 
 # Train the network
-basicModel, _ = train_network(basicModel,train_input, train_target, mini_batch_size)
+basicModel, loss_record = train_network(basicModel,train_input, train_target, mini_batch_size)
 
 
 # Evaluate the performance of the model

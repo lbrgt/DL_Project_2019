@@ -47,24 +47,6 @@ class Analyzer_Net(nn.Module):
         x = torch.tanh(self.fc4(x))
         x = self.fc5(x)
         return x
-      
-def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
-    test_target = test_target.type(torch.FloatTensor)
-    
-    with torch.no_grad():
-        error = 0
-        for b in range(0, test_input.size(0), mini_batch_size):
-            output = model(test_input.narrow(0, b, mini_batch_size))
-            for i in range(output.size(0)):
-                if torch.argmax(output[i]) == 1:
-                    if test_target.narrow(0, b, mini_batch_size)[i].item() < 0.2:
-                        error += 1
-                elif torch.argmax(output[i]) == 0:
-                    if test_target.narrow(0, b, mini_batch_size)[i].item() > 0.8:
-                        error += 1
-                else:
-                    error += 1
-    return error/test_target.size(0)*100
 
 
 # Evaluate the network's performance with winner takes it all approach

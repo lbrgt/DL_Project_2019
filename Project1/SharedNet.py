@@ -68,7 +68,7 @@ def train():
     # Define the number of epochs to train the network
     epochs = 100
     # Set the learning rate
-    eta = 0.1
+    eta = 0.5
 
     for e in range(0, epochs):
         sum_loss = 0
@@ -95,10 +95,10 @@ def train():
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     
     res = evaluate(basicModel,batch_size=batch_size)
-    print('Error rate of BasicNet: ',res,'%')
+    print('Error rate of SharedNet: ',res,'%')
 
 
-def evaluate(model,batch_size=100):
+def evaluate(model,batch_size):
     global test_input, test_target, test_classes
     test_target = test_target.type(torch.FloatTensor)
 
@@ -115,7 +115,7 @@ def evaluate(model,batch_size=100):
                     if test_target.narrow(0, b, batch_size)[i].item() > 0.8:
                         error += 1
                 else:
-                    error += 1
+                    error += 1   
     return error/test_target.size(0)*100
 
 

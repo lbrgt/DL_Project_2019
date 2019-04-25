@@ -81,7 +81,7 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
     epochs = 25
     
     # Set the learning rate
-    eta = 1e-0
+    eta = 1e-1
     optimizer = torch.optim.SGD(model.parameters(), lr = eta)
     loss_record=[]
     

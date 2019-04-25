@@ -1,6 +1,11 @@
 '''
     This file automatically trains and runs all networks and collects data about each configuration. 
     It then generates some figures illustrating the performance of the different architectures. 
+    The module can be called:
+        § Master.py
+    which will train each network, or: 
+        § Master.py -t
+    which will load pretrained networks and their corresponding losses. 
 '''
 # Import utility modules
 import argparse
@@ -80,7 +85,7 @@ def train_all():
     global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
         ws_il_sep_model_parallel,ws_il_sep_model_analyzer
 
-    # Train each indiviudal network
+    # Train each individual network
     # I - NoWS_NoIL
     print('Training NoWS_NoIL:')
     nows_noil_model, nows_noil_loss = NoWS_NoIL.train_network(nows_noil_model, train_input, train_target, mini_batch_size)
@@ -108,14 +113,60 @@ def train_all():
     cross_losses = [nows_il_loss_classifier,ws_il_loss_classifier,sep_loss_parallel]
     return mse_losses,cross_losses
 
+def plot_result(res_class:dict, res_final:dict):
+    #_ = plt.figure()
+    #plt.plot(res_class.items())
+
+    _ = plt.figure()
+    for i in res_final.items():
+        plt.plot(i[0],i[1],color='b',marker='o')
+
+    # Finalize the figure
+    plt.title('Error rate of the different architectures')
+    plt.xlabel('Architecture type')
+    plt.ylabel('Error rate in %')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('figures/ErrorRate.png')
 
 def eval_all():
     '''
         Eval each model
     '''
-    
+    nows_noil_res = NoWS_NoIL.evaluateFinalOutput(nows_noil_model,test_input,test_target,mini_batch_size)
 
-def main(parser):
+    #nows_il_res_class = NoWS_IL.evaluateClassIdentification(nows_il_model, test_input, test_classes, mini_batch_size)
+    nows_il_res = NoWS_IL.evaluateFinalOutput(nows_il_model, test_input, test_target, mini_batch_size) 
+
+    ws_noil_res = WS_NoIL.evaluateFinalOutput(ws_noil_model, test_input, test_target, mini_batch_size)
+
+    #ws_il_res_class = WS_IL.evaluateClassIdentification(ws_il_model, test_input, test_classes, mini_batch_size)
+    ws_il_res = WS_IL.evaluateFinalOutput(ws_il_model, test_input, test_target, mini_batch_size)
+
+    ws_il_sep_res_class = WS_IL_separate.evaluateClassIdentification(
+        ws_il_sep_model_parallel, test_input, test_classes, mini_batch_size)
+    ws_il_sep_res = WS_IL_separate.evaluateBothNetworks(
+        ws_il_sep_model_parallel, ws_il_sep_model_analyzer, test_input, test_target, mini_batch_size)
+    ws_il_sep_res_pretty = WS_IL_separate.evaluateBothNetworksPretty(
+        ws_il_sep_model_parallel, ws_il_sep_model_analyzer, test_input, test_target, mini_batch_size)
+
+    # Return a dictionary of the performances:
+    res_class = {
+        #'nows_il':nows_il_res_class,
+        #'ws_il':ws_il_res_class,
+        'ws_il_sep':ws_il_sep_res_class
+    }
+    res_final= {
+        'nows_noil':nows_noil_res,
+        'nows_il':nows_il_res,
+        'ws_noil':ws_noil_res,
+        'ws_il':ws_il_res,
+        'ws_il_sep':ws_il_sep_res,
+        'ws_il_pretty':ws_il_sep_res_pretty
+    }
+    return res_class, res_final
+
+def main(parser:argparse.ArgumentParser):
     global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
         ws_il_sep_model_parallel,ws_il_sep_model_analyzer
     
@@ -141,7 +192,7 @@ def main(parser):
         ws_il_sep_model_analyzer = nets[5] 
         infile.close()
     else:
-        # Train the network
+        # Train the networks
         mse_losses, cross_losses = train_all()
         # Dump the recorded losses
         outfile = open('pickle/losses','wb')
@@ -160,8 +211,10 @@ def main(parser):
     plot_MSEloss(mse_losses)
     plot_CrossEntropy_loss(cross_losses)
 
-    eval_all()
+    res_class, res_final = eval_all()
+    plot_result(res_class, res_final)
 
+    # Display all generated figures
     plt.show() 
 
 if __name__ == "__main__":

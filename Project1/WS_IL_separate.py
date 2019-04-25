@@ -7,7 +7,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from sub_modules import Parallel_Net, Analyzer_Net, \
-        evaluateFinalOutput, generateComputationalTree
+        generateComputationalTree
 
 ####################################################################################################
 '''
@@ -37,6 +37,7 @@ def trainClassIdentifier(model, train_input, train_classes, mini_batch_size):
     
     # Set the learning rate
     eta = 0.01
+    loss_record=[]
 
     for e in range(epochs):
         sum_loss = 0
@@ -52,8 +53,9 @@ def trainClassIdentifier(model, train_input, train_classes, mini_batch_size):
                 p.data.sub_(eta * p.grad.data)
         #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
+        loss_record.append(sum_loss)
     
-    return model
+    return model, loss_record
 
 # Evaluate the network's performance with winner takes it all approach
 def evaluateClassIdentification(model, test_input, test_classes, mini_batch_size):
@@ -73,7 +75,7 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
     train_target_oneHot = torch.eye(2)[train_target]
     
     # Specify the loss function
-    criterion = nn.MSELoss(reduction='mean')
+    criterion = nn.MSELoss()
 
     # Define the number of epochs to train the network
     epochs = 25
@@ -81,6 +83,7 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
     # Set the learning rate
     eta = 1e-0
     optimizer = torch.optim.SGD(model.parameters(), lr = eta)
+    loss_record=[]
     
     # One hot encode the training classes and concatenate them (1000x2)->(1000x2x10)
     train_oneHot = torch.empty([train_classes.shape[0],2,10])
@@ -100,10 +103,11 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
             optimizer.step()
             '''for p in model.parameters():
                 p.data.sub_(eta * p.grad.data)'''
+        loss_record.append(sum_loss)
         #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     
-    return model
+    return model, sum_loss
 
 def evaluateAnalyzer(model,test_classes, test_target,mini_batch_size):
     # One hot encode the training classes and concatenate them (1000x2)->(1000x2x10)
@@ -175,6 +179,9 @@ def evaluateBothNetworksPretty(parallel_net,analyzer_net,test_input,test_target,
                     error += 1
     return error/test_target.size(0)*100
 
+def Net():
+    return Parallel_Net(), Analyzer_Net()
+
 def main():
     '''
         Setup both networks and train them individually
@@ -187,12 +194,11 @@ def main():
     mini_batch_size = 200
 
     # Declare both instances of the nets
-    parallel_net = Parallel_Net()
-    analyser_net  = Analyzer_Net()
+    parallel_net, analyser_net = Net()
 
     # Train both networks
-    parallel_net = trainClassIdentifier(parallel_net, train_input, train_classes, mini_batch_size)
-    analyser_net = trainAnalyzer(analyser_net, train_classes, train_target, mini_batch_size)
+    parallel_net, _ = trainClassIdentifier(parallel_net, train_input, train_classes, mini_batch_size)
+    analyser_net, _ = trainAnalyzer(analyser_net, train_classes, train_target, mini_batch_size)
 
     '''
         Evaluate both networks independently

@@ -3,6 +3,8 @@
     It then generates some figures illustrating the performance of the different architectures. 
 '''
 # Import utility modules
+import argparse
+import pickle 
 from matplotlib import pyplot as plt
 import dlc_practical_prologue as prologue
 
@@ -113,8 +115,47 @@ def eval_all():
     '''
     
 
-def main():
-    mse_losses, cross_losses = train_all()
+def main(parser):
+    global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
+        ws_il_sep_model_parallel,ws_il_sep_model_analyzer
+    
+    # Get the command line arguments
+    args = parser.parse_args()
+
+    # Get or generate the networks and losses
+    if args.pretrained:
+        print('Using pretrained networks')
+        # Load the stored losses
+        infile = open('pickle/losses','rb')
+        losses = pickle.load(infile)
+        mse_losses, cross_losses = losses[0], losses[1]
+        infile.close()
+        # Load the trained networks
+        infile = open('pickle/trainedNet','rb')
+        nets = pickle.load(infile)
+        nows_noil_model = nets[0]
+        nows_il_model = nets[1]
+        ws_noil_model = nets[2]
+        ws_il_model = nets[3]
+        ws_il_sep_model_parallel = nets[4]
+        ws_il_sep_model_analyzer = nets[5] 
+        infile.close()
+    else:
+        # Train the network
+        mse_losses, cross_losses = train_all()
+        # Dump the recorded losses
+        outfile = open('pickle/losses','wb')
+        pickle.dump([mse_losses, cross_losses], outfile) 
+        outfile.close() 
+        # Dump the trained networks
+        outfile = open('pickle/trainedNet','wb')
+        pickle.dump([nows_noil_model,
+                    nows_il_model,
+                    ws_noil_model,
+                    ws_il_model,
+                    ws_il_sep_model_parallel,
+                    ws_il_sep_model_analyzer], outfile) 
+        outfile.close() 
 
     plot_MSEloss(mse_losses)
     plot_CrossEntropy_loss(cross_losses)
@@ -124,4 +165,9 @@ def main():
     plt.show() 
 
 if __name__ == "__main__":
-    main()
+    # Setup the command line parser
+    parser = argparse.ArgumentParser(description='Master script to train and run predefined networks')
+    parser.add_argument('-t','--trained', action='store_true', default=False,
+                    dest='pretrained',
+                    help='use pretrained networks')
+    main(parser) 

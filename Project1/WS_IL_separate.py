@@ -81,7 +81,7 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
     epochs = 25
     
     # Set the learning rate
-    eta = 1e-1
+    eta = 0.1
     optimizer = torch.optim.SGD(model.parameters(), lr = eta)
     loss_record=[]
     
@@ -107,7 +107,7 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
         #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     
-    return model, sum_loss
+    return model, loss_record
 
 def evaluateAnalyzer(model,test_classes, test_target,mini_batch_size):
     # One hot encode the training classes and concatenate them (1000x2)->(1000x2x10)

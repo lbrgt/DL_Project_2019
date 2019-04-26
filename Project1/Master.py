@@ -1,15 +1,18 @@
 '''
     This file automatically trains and runs all networks and collects data about each configuration. 
     It then generates some figures illustrating the performance of the different architectures. 
-    The module can be called:
-        § Master.py
-    which will train each network, or: 
-        § Master.py -t
-    which will load pretrained networks and their corresponding losses. 
+    
+    usage: Master.py [-h] [-t] [-s] [-l]
+    optional arguments:
+        -h, --help     show this help message and exit
+        -t, --trained  use pretrained networks
+        -s, --stat     train and evaluate 10 times the networks and return their error rates
+        -l, --load     load precomputed statistics (use it with -s option)
 '''
 # Import utility modules
 import argparse
 import pickle 
+import numpy as np 
 from matplotlib import pyplot as plt
 import dlc_practical_prologue as prologue
 
@@ -133,16 +136,17 @@ def eval_all():
     '''
         Eval each model
     '''
+    # I - NoWS_NoIL
     nows_noil_res = NoWS_NoIL.evaluateFinalOutput(nows_noil_model,test_input,test_target,mini_batch_size)
-
+    # II - NoWS_IL
     #nows_il_res_class = NoWS_IL.evaluateClassIdentification(nows_il_model, test_input, test_classes, mini_batch_size)
     nows_il_res = NoWS_IL.evaluateFinalOutput(nows_il_model, test_input, test_target, mini_batch_size) 
-
+    # III - WS_NoIL
     ws_noil_res = WS_NoIL.evaluateFinalOutput(ws_noil_model, test_input, test_target, mini_batch_size)
-
+    # IV - WS_IL
     #ws_il_res_class = WS_IL.evaluateClassIdentification(ws_il_model, test_input, test_classes, mini_batch_size)
     ws_il_res = WS_IL.evaluateFinalOutput(ws_il_model, test_input, test_target, mini_batch_size)
-
+    # V - WS_IL_separate
     ws_il_sep_res_class = WS_IL_separate.evaluateClassIdentification(
         ws_il_sep_model_parallel, test_input, test_classes, mini_batch_size)
     ws_il_sep_res = WS_IL_separate.evaluateBothNetworks(
@@ -166,12 +170,69 @@ def eval_all():
     }
     return res_class, res_final
 
+def plot_statistics(keys:np.array,stats:np.array):
+    _ = plt.figure()
+    plt.boxplot(stats) 
+    plt.title('Error rate statistics over 10 runs')
+    xlabel = ''
+    for k in keys:
+        xlabel += str(k) + '        '
+    plt.xlabel(xlabel + '\nArchitecture type')
+    plt.ylabel('Error rate in %')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('figures/ErrorRateStat.png')
+
+def generate_statistics():
+    global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
+        ws_il_sep_model_parallel,ws_il_sep_model_analyzer
+    
+    res_final_stat = []
+    for i in range(10):
+        # Reintialize each network
+        nows_noil_model = NoWS_NoIL.Net()
+        nows_il_model   = NoWS_IL.Net()
+        ws_noil_model   = WS_NoIL.Net()
+        ws_il_model     = WS_IL.Net()
+        ws_il_sep_model_parallel, ws_il_sep_model_analyzer = WS_IL_separate.Net() 
+
+        _, _ = train_all()
+        _, res_final = eval_all() 
+        res_keys = list(res_final.keys()) 
+        res_values = list(res_final.values())
+        res_final_stat.append(res_values)
+
+    res_keys = np.array(res_keys)
+    res_final_stat = np.array(res_final_stat)
+    res_final_stat = res_final_stat 
+    outfile = open('pickle/stats','wb')
+    pickle.dump([res_keys,res_final_stat], outfile) 
+    outfile.close() 
+    return np.array(res_keys), res_final_stat
+
+
 def main(parser:argparse.ArgumentParser):
     global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
         ws_il_sep_model_parallel,ws_il_sep_model_analyzer
     
     # Get the command line arguments
     args = parser.parse_args()
+
+    # If the script is run in stat mode
+    if args.statistic:
+        if not args.load:
+            res_final_keys, res_final_stat = generate_statistics()
+        else:
+            # Load the stored losses
+            infile = open('pickle/stats','rb')
+            stats = pickle.load(infile)
+            res_final_keys, res_final_stat = stats[0], stats[1]
+            infile.close()
+
+        plot_statistics(res_final_keys, res_final_stat) 
+        
+        plt.show() 
+        return 
 
     # Get or generate the networks and losses
     if args.pretrained:
@@ -223,4 +284,10 @@ if __name__ == "__main__":
     parser.add_argument('-t','--trained', action='store_true', default=False,
                     dest='pretrained',
                     help='use pretrained networks')
+    parser.add_argument('-s','--stat', action='store_true', default=False,
+                    dest='statistic',
+                    help='train and evaluate 10 times the networks and return their error rates')
+    parser.add_argument('-l','--load', action='store_true', default=False,
+                    dest='load',
+                    help='load precomputed statistics (use it with -s option)')
     main(parser) 

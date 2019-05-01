@@ -3,6 +3,29 @@ import sys
 import os
 sys.path.append(os.getcwd()+'/Project2/')
 import torch
-import NeuralNet
+from NeuralNet import *
 
+
+nn = DLModule()
+nn.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
+
+#%%
+b = torch.Tensor([[1,1],[2,2]])
+output = nn.forward_pass(b)
+
+#%%
+target = torch.Tensor([[1,1,1],[2,2,2 ]])
+
+lossMSE = LossMSE()
+
+lossMSE.compute_loss(target, output)
+
+nn.backward_pass(lossMSE)
+#%%
+nn.update(0.1)
+
+
+#%%
+nn.layer[0].zero_grad()
+nn.layer[0].dl_db_cumulative
 #%%

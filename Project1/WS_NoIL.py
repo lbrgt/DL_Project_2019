@@ -41,7 +41,7 @@ class Net(nn.Module):
 
         # No weight sharing (declare 2 distinct instances of Parallel_Net)
         x1 = self.parallel_net(x1)
-        x2 = self.parallel_neta(x2)
+        x2 = self.parallel_net(x2)
 
         # Concatenate back both classification results 
         x = torch.cat((x1.view(-1,10),x2.view(-1,10)),dim=1)
@@ -94,24 +94,25 @@ def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
                     error += 1
     return error/test_target.size(0)*100    
 
+def main():
+    # Define the mini_batch size (A PLACER DANS LE MASTER)
+    mini_batch_size = 100
 
-# Define the mini_batch size (A PLACER DANS LE MASTER)
-mini_batch_size = 100
+    # Create an instance of the network
+    basicModel = Net()
+    num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
+    print('Number of trainable parameters:',num_param)  
 
-# Create an instance of the network
-basicModel = Net()
-num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
-print('Number of trainable parameters:',num_param)  
-
-# Train the network
-basicModel, loss_record = train_network(basicModel,train_input, train_target, mini_batch_size)
-
-
-# Evaluate the performance of the model
-res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
-print('Error rate of the model: ',res,'%')
+    # Train the network
+    basicModel, loss_record = train_network(basicModel,train_input, train_target, mini_batch_size)
 
 
+    # Evaluate the performance of the model
+    res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
+    print('Error rate of the model: ',res,'%')
+
+if __name__ == "__main__":
+    main()
 
 
 

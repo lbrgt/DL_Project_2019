@@ -138,14 +138,18 @@ def eval_all():
     '''
     # I - NoWS_NoIL
     nows_noil_res = NoWS_NoIL.evaluateFinalOutput(nows_noil_model,test_input,test_target,mini_batch_size)
+
     # II - NoWS_IL
     #nows_il_res_class = NoWS_IL.evaluateClassIdentification(nows_il_model, test_input, test_classes, mini_batch_size)
     nows_il_res = NoWS_IL.evaluateFinalOutput(nows_il_model, test_input, test_target, mini_batch_size) 
+
     # III - WS_NoIL
     ws_noil_res = WS_NoIL.evaluateFinalOutput(ws_noil_model, test_input, test_target, mini_batch_size)
+
     # IV - WS_IL
     #ws_il_res_class = WS_IL.evaluateClassIdentification(ws_il_model, test_input, test_classes, mini_batch_size)
     ws_il_res = WS_IL.evaluateFinalOutput(ws_il_model, test_input, test_target, mini_batch_size)
+    
     # V - WS_IL_separate
     ws_il_sep_res_class = WS_IL_separate.evaluateClassIdentification(
         ws_il_sep_model_parallel, test_input, test_classes, mini_batch_size)

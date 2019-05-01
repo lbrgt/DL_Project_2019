@@ -193,7 +193,7 @@ def main():
     train_input, train_target, train_classes, test_input, test_target, test_classes = prologue.generate_pair_sets(nb)
 
     # Define the mini_batch size
-    mini_batch_size = 200
+    mini_batch_size = 100
 
     # Declare both instances of the nets
     parallel_net, analyser_net = Net()

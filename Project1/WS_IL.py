@@ -58,7 +58,7 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
     criterion_classifier = nn.CrossEntropyLoss()
 
     # Define the number of epochs to train the network
-    epochs = 25
+    epochs = 50
 
     # Set the learning rate
     eta = 0.02

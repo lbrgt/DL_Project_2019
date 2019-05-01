@@ -272,6 +272,7 @@ def main(parser:argparse.ArgumentParser):
     plot_MSEloss(mse_losses)
     plot_CrossEntropy_loss(cross_losses)
 
+
     res_class, res_final = eval_all()
     plot_result(res_class, res_final)
 

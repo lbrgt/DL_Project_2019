@@ -37,6 +37,8 @@ def trainClassIdentifier(model, train_input, train_classes, mini_batch_size):
     
     # Set the learning rate
     eta = 0.01
+    optimizer = torch.optim.SGD(model.parameters(), lr = eta, momentum = 0.0)
+
     loss_record=[]
 
     for e in range(epochs):
@@ -49,8 +51,8 @@ def trainClassIdentifier(model, train_input, train_classes, mini_batch_size):
                 loss = criterion(output, train_classes[:,i].narrow(0, b, mini_batch_size))
                 sum_loss += loss.item()
                 loss.backward()
-            for p in model.parameters():
-                p.data.sub_(eta * p.grad.data)
+
+            optimizer.step()
         #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
         loss_record.append(sum_loss)
@@ -82,7 +84,7 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
     
     # Set the learning rate
     eta = 0.1
-    optimizer = torch.optim.SGD(model.parameters(), lr = eta)
+    optimizer = torch.optim.SGD(model.parameters(), lr = eta, momentum = 0.9)
     loss_record=[]
     
     # One hot encode the training classes and concatenate them (1000x2)->(1000x2x10)

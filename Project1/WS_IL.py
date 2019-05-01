@@ -1,5 +1,5 @@
 import torch
-from torch import Tensor
+from torch import Tensor, optim
 import dlc_practical_prologue as prologue
 from matplotlib import pyplot as plt
 import time
@@ -58,10 +58,15 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
     criterion_classifier = nn.CrossEntropyLoss()
 
     # Define the number of epochs to train the network
-    epochs = 50
+    epochs = 25
 
     # Set the learning rate
-    eta = 0.02
+    eta = 0.01
+
+    #Define optimizer
+    optimizer = torch.optim.Adam(model.parameters(), lr=eta, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
+    #optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+
     
     loss_record_total=[]
     loss_record_classifier=[]
@@ -83,8 +88,7 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
             sum_loss_total += loss_total.item()
             loss_total.backward()
 
-            for p in model.parameters():
-                p.data.sub_(eta * p.grad.data)
+            optimizer.step()
         loss_record_total.append(sum_loss_total)
         loss_record_classifier.append(sum_loss_classifier)
         print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  

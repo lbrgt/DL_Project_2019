@@ -58,8 +58,10 @@ def train_network(model, train_input, train_target, mini_batch_size):
     # Define the number of epochs to train the network
     epochs = 25
     
-    # Set the learning rate
+   # Set the learning rate
     eta = 0.1
+    optimizer = torch.optim.SGD(model.parameters(), lr = eta, momentum = 0.0)
+
     loss_record=[]
     for e in range(epochs):
         sum_loss = 0
@@ -69,8 +71,8 @@ def train_network(model, train_input, train_target, mini_batch_size):
             sum_loss = sum_loss + loss.item()
             model.zero_grad()
             loss.backward()
-            for p in model.parameters():
-                p.data.sub_(eta * p.grad.data)
+            
+            optimizer.step()
         loss_record.append(sum_loss)
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     return model, loss_record

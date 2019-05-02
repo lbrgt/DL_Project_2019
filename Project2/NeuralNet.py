@@ -1,10 +1,12 @@
 import torch
+import math
 #%%
 class DLModule:  
 
-    def __init__(self, *args):
+    def __init__(self, optmizer , *args):
         self.layer = []
         print(args)
+        self.optmizer = optmizer
         if args :
             for item in list(args): 
                 if hasattr(item, 'forward') and hasattr(item, 'backward'):
@@ -38,7 +40,7 @@ class DLModule:
     def update(self,eta): 
         for node in self.layer:
             try:
-                node.update_param(eta)
+                optimizer()
                 node.zero_grad()
             except:
                 pass
@@ -146,15 +148,62 @@ class Linear:
     def zero_grad(self):
         self.dl_dw_cumulative.fill_(0)
         self.dl_db_cumulative.fill_(0)
-'''
-t+=1
-m_t = beta_1*m_t + (1-beta_1)*g_t	#updates the moving averages of the gradient
-v_t = beta_2*v_t + (1-beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
-m_cap = m_t/(1-(beta_1**t))		#calculates the bias-corrected estimates
-v_cap = v_t/(1-(beta_2**t))		#calculates the bias-corrected estimates
-theta_0_prev = theta_0								
-theta_0 = theta_0 - (alpha*m_cap)/(math.sqrt(v_cap)+epsilon) #updates the parameters
 
+class AdamOptimizer():
+    def __init__(self, beta_1, beta_2, step_size, epsilon):
+        self.layer_memory_m = dict()
+        self.layer_memory_v = dict()
+        self.beta_1 = beta_1
+        self.beta_2 = beta_2
+        self.step_size = step_size
+        self.epsilon = epsilon
+
+    def step(self, layer):
+        g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
+
+        if layer in self.layer_memory_g:
+            m_t_1 = self.layer_memory_m[layer]
+            v_t_1 = self.layer_memory_v[layer]
+        else:
+            m_t_1 = torch.empty(g.shape).fill_(0)
+            v_t_1 = torch.empty(g.shape).fill_(0)
+
+        m_t = self.beta_1 * m_t_1 + (1 - self.beta_1) * g
+        v_t = self.beta_2 * v_t_1+ (1 - selfbeta_2) * torch.pow(g, 2)
+        m_hat = m_t / (1 - self.beta_1)
+        v_hat = v_t / (1 - self.beta_2)
+
+        w = torch.cat([layer.weight, layer.bias], 0)
+
+        truc = w - step_size * m_hat / (torch.sqrt(v_hat) + self.epsilon)
+
+        layer.weight = truc[:-1,:]
+        layer.bias = truc[-1,:]
+
+        self.layer_memory_m[layer] = m_t
+        self.layer_memory_v[layer] = v_t
+       
+class SGDOptimizer():
+    def __init__(self, step_size, momentum):
+        self.layer_memory = dict()
+        self.step_size = step_size
+        self.momentum = momentum
+
+    def step(self, layer):
+        g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
+
+        if layer in self.layer_memory:
+            u_t_1 = self.layer_memory[layer]
+        else:
+            u_t_1 = torch.empty(g.shape).fill_(0)
+        
+        w = torch.cat([layer.weight, layer.bias], 0)
+        u_t = self.momentum*u_t_1 + self.step_size * g
+        layer.weight = truc[:-1,:]
+        layer.bias = truc[-1,:]
+        self.layer_memory[layer] = u_t
+          
+'''
 for t in range(num_iterations):
     g = compute_gradient(x, y)
     m = beta_1 * m + (1 - beta_1) * g
@@ -167,3 +216,6 @@ view raw
 
 
 '''
+
+
+#%%

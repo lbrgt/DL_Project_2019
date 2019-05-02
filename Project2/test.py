@@ -6,8 +6,9 @@ import torch
 from NeuralNet import *
 
 
-nn = DLModule()
+nn = DLModule(AdamOptimizer(0.1, 0.2))
 nn.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
+nn.optmizer = AdamOptimizer(0.1, 0.2)
 
 #%%
 b = torch.Tensor([[1,1],[2,2]])

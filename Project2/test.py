@@ -5,10 +5,9 @@ sys.path.append(os.getcwd()+'/Project2/')
 import torch
 from NeuralNet import *
 
-
-nn = DLModule(AdamOptimizer(0.1, 0.2))
+nn = DLModule(optmizer=SGDOptimizer())
 nn.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
-nn.optmizer = AdamOptimizer(0.1, 0.2)
+nn.optmizer = AdamOptimizer(0.1, 0.1, 0.1, 0.1)
 
 #%%
 b = torch.Tensor([[1,1],[2,2]])

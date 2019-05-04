@@ -174,7 +174,7 @@ def plot_statistics(keys:np.array,stats:np.array):
     _ = plt.figure()
     plt.boxplot(stats) 
     plt.title('Error rate statistics over 10 runs')
-    xlabel = ''
+    xlabel = '        '
     for k in keys:
         xlabel += str(k) + '        '
     plt.xlabel(xlabel + '\nArchitecture type')
@@ -210,6 +210,19 @@ def generate_statistics():
     outfile.close() 
     return np.array(res_keys), res_final_stat
 
+def computeErrorRateSTD(keys:np.array, stats:np.array):
+    # stats is (10,6) array -> compute std along columns
+    stds  = np.std(stats,axis=0)
+    #print('Standard deviation of each architecture:',stds)
+
+    plt.figure()
+    plt.scatter(keys,stds)
+    plt.title('Standard deviation of the error rate of the different architectures')
+    plt.xlabel('Architecture type')
+    plt.ylabel('Standard deviation')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.savefig('figures/stds.png')
 
 def main(parser:argparse.ArgumentParser):
     global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
@@ -230,6 +243,7 @@ def main(parser:argparse.ArgumentParser):
             infile.close()
 
         plot_statistics(res_final_keys, res_final_stat) 
+        computeErrorRateSTD(res_final_keys, res_final_stat)
         
         plt.show() 
         return 

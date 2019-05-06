@@ -29,11 +29,22 @@ class DLModule:
         print(layer)
         self.optmizer = optmizer
         if layer :
-            for item in list(args): 
+            for item in layer: 
                 if hasattr(item, 'forward') and hasattr(item, 'backward'):
                     self.layer.append(item)  
                 else: 
                     raise Exception("The module should containt forward and backward pass")
+
+    def __str__(self):
+        value = 'Model architecture:\n'
+        for layer in self.layer:
+            value += str(layer) #+ '\n'
+            if type(layer).__name__ is 'Linear':
+                value += ', weights dimensions:' + str(layer.weight.shape)
+                value += ', bias dimensions' + str(layer.bias.shape) + '\n'
+            else:
+                value += '\n'
+        return value
 
     def sequential(self, *args):
         for item in list(args): 

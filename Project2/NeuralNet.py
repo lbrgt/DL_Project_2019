@@ -37,7 +37,7 @@ class DLModule:
     def __str__(self):
         value = 'Model architecture:\n'
         for layer in self.layer:
-            value += str(layer) #+ '\n'
+            value += str(layer) 
             if type(layer).__name__ is 'Linear':
                 value += ', weights dimensions: ' + str(layer.weight.shape)
                 value += ', bias dimensions: ' + str(layer.bias.shape) + '\n'

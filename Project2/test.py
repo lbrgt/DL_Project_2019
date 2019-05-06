@@ -7,9 +7,12 @@ import torch
 from NeuralNet import DLModule, LossMSE, Tanh, Relu, Linear, SGDOptimizer, AdamOptimizer
 
 # Instanciate the model
-model = DLModule(optmizer=SGDOptimizer())
+model = DLModule(
+    Linear(2,3),
+    optmizer=SGDOptimizer(),
+)
 # Define its architecture
-model.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
+#model.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
 # Display its architecture
 print(model)
 
@@ -23,11 +26,11 @@ train_target = torch.Tensor([[1,1,1],[2,2,2]])
 # Define a loss 
 lossMSE = LossMSE()
 
-# Compute the loss
+# Compute the loss 
 loss = lossMSE.compute_loss(train_target, train_output) 
 
 # Backward pass
-model.backward_pass(lossMSE) # NOTE - Should only provide values, not instance! 
+model.backward(lossMSE) # NOTE - Should only provide values, not instance! 
 
 # Update the model
 model.update(eta=0.1)

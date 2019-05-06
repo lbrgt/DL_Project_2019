@@ -24,9 +24,8 @@ class SGDOptimizer:
 
 class DLModule:  
 
-    def __init__(self, optmizer = SGDOptimizer(), *layer):
+    def __init__(self, *layer, optmizer = SGDOptimizer()):
         self.layer = []
-        print(layer)
         self.optmizer = optmizer
         if layer :
             for item in layer: 
@@ -40,34 +39,31 @@ class DLModule:
         for layer in self.layer:
             value += str(layer) #+ '\n'
             if type(layer).__name__ is 'Linear':
-                value += ', weights dimensions:' + str(layer.weight.shape)
-                value += ', bias dimensions' + str(layer.bias.shape) + '\n'
+                value += ', weights dimensions: ' + str(layer.weight.shape)
+                value += ', bias dimensions: ' + str(layer.bias.shape) + '\n'
             else:
                 value += '\n'
         return value
 
     def sequential(self, *args):
         for item in list(args): 
-            print('ici')
-            print(item)
             if hasattr(item, 'forward') and hasattr(item, 'backward'):
                 self.layer.append(item)  
             else: 
                 raise Exception("The module should containt forward and backward pass")
-        print(self.layer)
 
-    def forward_pass(self , input):
+    def forward(self , input):
         for node in self.layer:
-            print(node)
+            #print(node)
             input = node.forward(input)
         return input
     
-    def backward_pass(self, loss):
+    def backward(self, loss):
         output = loss.dloss
         for node in list(reversed(self.layer)):
-            print(output)
+            #print(output)
             output = node.backward(output)   
-        print(output)
+        #print(output)
 
     def update(self,eta): 
         for node in self.layer:
@@ -140,9 +136,9 @@ class Linear:
     def __init__(self, input_dim, output_dim):
         '''
             weight size [input_dim x output_dim]
-            bias size [ 1 x output_dim]
-            grad_weight [ input_dim x output_dim]
-            grad_bias [ 1 x output_dim]
+            bias size [1 x output_dim]
+            grad_weight [input_dim x output_dim]
+            grad_bias [1 x output_dim]
         '''
 
         std = math.sqrt(2.0 / (input_dim + output_dim))
@@ -154,8 +150,7 @@ class Linear:
     
     def forward(self, x):
         self.input_previous = x
-        print('La')
-        print(x)
+        #print(x)
         return x @ self.weight + self.bias
 
     def backward(self, dl_ds):
@@ -169,8 +164,8 @@ class Linear:
         dl_dx = dl_ds @ self.weight.transpose(0,1)
         self.dl_dw_cumulative += self.input_previous.transpose(0,1) @ dl_ds
         self.dl_db_cumulative += dl_ds.sum(0)
-        print(self.dl_db_cumulative)
-        print(self.dl_dw_cumulative)
+        #print(self.dl_db_cumulative)
+        #print(self.dl_dw_cumulative)
         return dl_dx
 
     def update_param(self, eta):

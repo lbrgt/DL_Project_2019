@@ -45,6 +45,19 @@ class DLModule:
                 value += '\n'
         return value
 
+    def displayParameters(self):
+        value = "Model's parameters:\n\n"
+        for layer in self.layer:
+            if type(layer).__name__ is 'Linear':
+                value += 'Layer type: Linear ' + '\n'
+                value += 'Weights: ' + str(layer.weight) + '\n'
+                value += 'Bias: ' + str(layer.bias) + '\n\n' 
+            else: 
+                value += 'Layer type: {}'.format(type(layer).__name__) + '\n'
+                value += 'None' + '\n\n'
+        print(value) 
+        return value 
+
     def sequential(self, *args):
         for item in list(args): 
             if hasattr(item, 'forward') and hasattr(item, 'backward'):
@@ -58,8 +71,8 @@ class DLModule:
             input = node.forward(input)
         return input
     
-    def backward(self, loss):
-        output = loss.dloss
+    def backward(self, loss:list): # NOTE - Provide a list with loss and dloss !
+        output = loss[1] # dloss 
         for node in list(reversed(self.layer)):
             #print(output)
             output = node.backward(output)   
@@ -89,7 +102,7 @@ class LossMSE:
     def compute_loss(self, output, target):
         self.loss = self.eval(output, target)
         self.dloss = self.evald(output, target)
-        return self.loss
+        return [self.loss, self.dloss]
 
     def eval(self, output, target):
         return torch.sum(torch.pow(output-target,2))
@@ -155,11 +168,11 @@ class Linear:
 
     def backward(self, dl_ds):
         '''
-        dl_dx received
-        compute dl_ds = dl_dx .*dF(self.s)
-        grad_weight dl_dw_cumulative += dl_ds*self.input ( input from forward pass)
-        grad_bias dl_db_cumulative += dl_ds
-        generate dl_dx_(l-1) for next layer : weight*dl_ds
+            dl_dx received
+            compute dl_ds = dl_dx .*dF(self.s)
+            grad_weight dl_dw_cumulative += dl_ds*self.input ( input from forward pass)
+            grad_bias dl_db_cumulative += dl_ds
+            generate dl_dx_(l-1) for next layer : weight*dl_ds
         '''
         dl_dx = dl_ds @ self.weight.transpose(0,1)
         self.dl_dw_cumulative += self.input_previous.transpose(0,1) @ dl_ds

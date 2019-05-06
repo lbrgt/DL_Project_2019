@@ -9,32 +9,35 @@ from NeuralNet import DLModule, LossMSE, Tanh, Relu, Linear, SGDOptimizer, AdamO
 # Instanciate the model
 model = DLModule(
     Linear(2,3),
+    Relu(),
     optmizer=SGDOptimizer(),
 )
-# Define its architecture
-#model.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
+
 # Display its architecture
 print(model)
+# Display its parmeters
+model.displayParameters()
 
-# Define a batch of training samples and do a forward pass
+# Define a batch of training samples and do a forward pass 
 train_input = torch.Tensor([[1,1],[2,2]])
 train_output = model.forward(train_input)
+print(train_output)
 
 # Define a batch of training targets
 train_target = torch.Tensor([[1,1,1],[2,2,2]])
-
-# Define a loss 
+'''
+# Define a loss - NOTE: only has to be instantiated once 
 lossMSE = LossMSE()
 
 # Compute the loss 
 loss = lossMSE.compute_loss(train_target, train_output) 
 
 # Backward pass
-model.backward(lossMSE) # NOTE - Should only provide values, not instance! 
+model.backward(loss) # NOTE - Should only provide values, not instance! 
 
 # Update the model
 model.update(eta=0.1)
-
+'''
 #%%
 '''
 b = torch.Tensor([[1,1],[2,2]])

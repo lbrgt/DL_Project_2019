@@ -6,12 +6,31 @@ sys.path.append(os.getcwd()+'/Project2/')
 import torch
 from NeuralNet import DLModule, LossMSE, Tanh, Relu, Linear, SGDOptimizer, AdamOptimizer
 
+# Instanciate the model
 model = DLModule(optmizer=SGDOptimizer())
+# Define its architecture
 model.sequential(Linear(2,3), Relu(), Linear(3,3), Relu())
+# Display its architecture
 print(model)
-#model.optmizer = AdamOptimizer(0.1, 0.1, 0.1, 0.1)
 
+# Define a batch of training samples and do a forward pass
+train_input = torch.Tensor([[1,1],[2,2]])
+train_output = model.forward(train_input)
 
+# Define a batch of training targets
+train_target = torch.Tensor([[1,1,1],[2,2,2]])
+
+# Define a loss 
+lossMSE = LossMSE()
+
+# Compute the loss
+loss = lossMSE.compute_loss(train_target, train_output) 
+
+# Backward pass
+model.backward_pass(lossMSE) # NOTE - Should only provide values, not instance! 
+
+# Update the model
+model.update(eta=0.1)
 
 #%%
 '''

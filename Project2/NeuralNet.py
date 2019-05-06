@@ -24,7 +24,7 @@ class SGDOptimizer:
 
 class DLModule:  
 
-    def __init__(self, optmizer = SGDOptimizer() , *layer):
+    def __init__(self, optmizer = SGDOptimizer(), *layer):
         self.layer = []
         print(layer)
         self.optmizer = optmizer
@@ -72,7 +72,7 @@ class DLModule:
     def update(self,eta): 
         for node in self.layer:
             try:
-                optimizer()
+                self.optimizer() 
                 node.zero_grad()
             except:
                 pass

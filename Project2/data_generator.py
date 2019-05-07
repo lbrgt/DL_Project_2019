@@ -1,22 +1,33 @@
 import torch
 from matplotlib import pyplot as plt 
-
-import math
-from math import pi
+import numpy as np 
+from numpy import pi 
 
 torch.set_grad_enabled(False)
 
 def plotDataset(input, output):
     plt.figure()
+
+    # Draw desired boundary
+    R = np.sqrt(1/(2*pi))
+    t = np.linspace(0, 2*pi, 100)
+    x = R*np.cos(t)
+    y = R*np.sin(t)
+    plt.plot(x,y,color='g',linestyle='--') 
+
+    # Draw generated data points 
     plt.scatter(input[output == 1][:,0],input[output == 1][:,1], label='Inside (1)')
     plt.scatter(input[output == 0][:,0],input[output == 0][:,1], label='Outside (0)') 
-    plt.title('Dataset, R={}'.format(math.sqrt(1/(2*pi))))
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.title('Dataset, R={}'.format(R))
     plt.legend()
+    plt.tight_layout()
+    plt.grid()  
     plt.show() 
 
 def generate_input_output_pairs(nb):
     input = torch.rand((nb,2))*1 - 0.5
-    R = math.sqrt(1/(2*pi))
+    R = np.sqrt(1/(2*pi))
     output = torch.where(input.norm(dim=1) < torch.ones(nb)*R, 
                          torch.tensor(1.),torch.tensor(0.))
      
@@ -34,5 +45,6 @@ def generate_dataset(nb=1000):
 # Sanity check
 if __name__ == "__main__":
     train_input, train_output, test_input, test_output = generate_dataset(1000)
+    print('Input and output sizes:',train_input.shape, train_output.shape)
     plotDataset(train_input,train_output)
     plotDataset(test_input,test_output) 

@@ -1,4 +1,9 @@
 import torch
+from sys import platform as sys_pf
+if sys_pf == 'darwin':
+    import matplotlib
+    matplotlib.use("TkAgg")
+
 from matplotlib import pyplot as plt 
 import numpy as np 
 from numpy import pi 

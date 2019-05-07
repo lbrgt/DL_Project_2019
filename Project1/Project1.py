@@ -19,7 +19,7 @@ train_input, train_target, train_classes, test_input, test_target, test_classes 
 
 class Parallel_Net(nn.Module):
     # Input is Nx2x14x14
-    def __init__(self):
+    def __init__(self): 
         super(Parallel_Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5, padding=2)
         self.fc1 = nn.Linear(10*14*14, 10)

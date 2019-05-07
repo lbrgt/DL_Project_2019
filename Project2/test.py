@@ -4,7 +4,6 @@ import os
 sys.path.append(os.getcwd()+'/Project2/')
 
 import torch
-from matplotlib import pyplot as plt 
 from NeuralNet import DLModule, LossMSE, Tanh, Sigmoid, Relu, Linear, SGDOptimizer, AdamOptimizer
 import data_generator as dg 
 
@@ -29,11 +28,6 @@ model.displayParameters()
 # Visualize model's initial behaviour with this lambda function
 showBehaviour = lambda model,input: dg.plotDataset(input,(model(test_input) < 0.5).int().view(-1)) 
 showBehaviour(model,test_input)
-
-#out = (model(test_input) < 0.5).int().view(-1) 
-#out = out < 0.5
-#out = out.int().view(-1) 
-#dg.plotDataset(test_input,out) 
 
 # Define a loss - NOTE: only has to be instantiated once now
 criterion = LossMSE()

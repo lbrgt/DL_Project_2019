@@ -31,7 +31,7 @@ def generate_input_output_pairs(nb):
     output = torch.where(input.norm(dim=1) < torch.ones(nb)*R, 
                          torch.tensor(1.),torch.tensor(0.))
      
-    return input.type(torch.FloatTensor), output.type(torch.LongTensor)
+    return input.type(torch.FloatTensor), output.type(torch.FloatTensor)
 
 def generate_dataset(nb=1000):
     train_input,train_output = generate_input_output_pairs(nb)

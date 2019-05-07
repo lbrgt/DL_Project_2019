@@ -32,7 +32,7 @@ class DLModule:
                 if hasattr(item, 'forward') and hasattr(item, 'backward'):
                     self.layer.append(item)  
                 else: 
-                    raise Exception("The module should containt forward and backward pass")
+                    raise Exception("The specified argument should implement forward() and backward() methods")
 
     def __str__(self):
         value = 'Model architecture:\n'
@@ -63,9 +63,9 @@ class DLModule:
             if hasattr(item, 'forward') and hasattr(item, 'backward'):
                 self.layer.append(item)  
             else: 
-                raise Exception("The module should containt forward and backward pass")
+                raise Exception("The specified argument should implement forward() and backward() methods") 
 
-    def forward(self , input):
+    def __call__(self, input): #def forward(self , input):
         for node in self.layer:
             #print(node)
             input = node.forward(input)
@@ -78,13 +78,20 @@ class DLModule:
             output = node.backward(output)   
         #print(output)
 
-    def update(self,eta): 
+    def update(self,eta=None):
+        if eta == None:
+            raise Exception("Error: a learing must be provided to update the parameters") 
         for node in self.layer:
             try:
                 self.optimizer() 
                 node.zero_grad()
             except:
                 pass
+    
+    def zero_grad(self): # NOTE - required for training 
+        for layer in self.layer:
+            if type(layer).__name__ is 'Linear':
+                layer.zero_grad()
 '''
 class Master():
     def forward(self):
@@ -99,9 +106,13 @@ class LossMSE:
     def __init__(self):
         self.loss = None
 
-    def compute_loss(self, output, target):
-        self.loss = self.eval(output, target)
-        self.dloss = self.evald(output, target)
+    def __call__(self, output, target): # compute_loss - NOTE: replaced name 
+        '''
+            Both inputs must satisfy .view(-1,1)
+            Returns a list of 2 tensors
+        '''
+        self.loss = self.eval(output.view(-1,1), target.view(-1,1))
+        self.dloss = self.evald(output.view(-1,1), target.view(-1,1))
         return [self.loss, self.dloss]
 
     def eval(self, output, target):
@@ -122,7 +133,21 @@ class Tanh:
         return self.eval(input)
 
     def backward(self, dl_dx):
-        return dl_dx * self.evald(self.input)    
+        return dl_dx * self.evald(self.input)   
+
+class Sigmoid:
+    def eval(self, x):
+        return torch.sigmoid(x)
+
+    def evald(self, x):
+        return torch.sigmoid(x)*(1 - torch.sigmoid(x))
+
+    def forward(self, input):
+        self.input = input    
+        return self.eval(input)
+
+    def backward(self, dl_dx):
+        return dl_dx * self.evald(self.input)  
 
 class Relu:
     def eval(self, x):

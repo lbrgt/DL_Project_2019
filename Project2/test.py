@@ -4,7 +4,9 @@ import os
 sys.path.append(os.getcwd()+'/Project2/')
 
 import torch
-from matplotlib import pyplot as plt 
+
+
+
 from NeuralNet import DLModule, LossMSE, Tanh, Sigmoid, Relu, Linear, SGDOptimizer, AdamOptimizer
 import data_generator as dg 
 

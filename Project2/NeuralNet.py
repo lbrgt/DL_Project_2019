@@ -3,12 +3,12 @@ import math
 #%%
 
 class SGDOptimizer:
-    def __init__(self, step_size=0.1, momentum= 0.9):
+    def __init__(self, eta=0.1, momentum= 0.9):
         self.layer_memory = dict()
-        self.step_size = step_size
-        self.momentum = momentum
+        self.eta = eta
+        self.momentum = momentum 
 
-    def step(self, layer):
+    def __call__(self, layer):
         g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
 
         if layer in self.layer_memory:
@@ -17,9 +17,11 @@ class SGDOptimizer:
             u_t_1 = torch.empty(g.shape).fill_(0)
         
         w = torch.cat([layer.weight, layer.bias], 0)
-        u_t = self.momentum*u_t_1 + self.step_size * g
-        layer.weight = truc[:-1,:]
-        layer.bias = truc[-1,:]
+        u_t = self.momentum*u_t_1 - self.eta * g
+        #layer.weight = truc[:-1,:]
+        #layer.bias = truc[-1,:]
+        layer.weight += u_t[:-1,:]
+        layer.bias += u_t[-1,:]
         self.layer_memory[layer] = u_t
 
 class DLModule:  
@@ -78,13 +80,11 @@ class DLModule:
             output = node.backward(output)   
         #print(output)
 
-    def update(self,eta=None):
-        if eta == None:
-            raise Exception("Error: a learing must be provided to update the parameters") 
-        for node in self.layer:
+    def update(self):
+        for layer in self.layer:
             try:
-                self.optimizer() 
-                node.zero_grad()
+                self.optimizer(layer) 
+                #layer.zero_grad() 
             except:
                 pass
     
@@ -208,7 +208,7 @@ class Linear:
 
     def update_param(self, eta):
         self.weight -= eta*self.dl_dw_cumulative
-        self.bias   -= eta*self.dl_db_cumulative
+        self.bias   -= eta*self.dl_db_cumulative 
         
     def zero_grad(self):
         self.dl_dw_cumulative.fill_(0)

@@ -10,7 +10,7 @@ import data_generator as dg
 # Disable torch functionnalities 
 torch.set_grad_enabled(False)
 
-# Generate the dataset
+# Generate the dataset 
 num_samples = 1000
 train_input, train_target, test_input, test_target = dg.generate_dataset(num_samples) 
 
@@ -18,7 +18,7 @@ train_input, train_target, test_input, test_target = dg.generate_dataset(num_sam
 model = DLModule(
     Linear(2,1),
     Sigmoid(),
-    optmizer=SGDOptimizer(),
+    optmizer=SGDOptimizer(eta=0.1, momentum= 0.9),
 )
 # Display its architecture
 print(model)
@@ -34,10 +34,8 @@ criterion = LossMSE()
 
 # Train the network
 epochs = 5
-eta = 0.1 
 mini_batch_size = 100
 for e in range(epochs):
-    break
     sum_loss = 0
     # We do this with mini-batches
     for b in range(0, train_input.size(0), mini_batch_size):
@@ -47,7 +45,7 @@ for e in range(epochs):
         sum_loss = sum_loss + loss[0].item()
         model.zero_grad()
         model.backward(loss)  
-        model.update(eta) 
+        model.update() 
     print(e, '-', sum_loss)
 
 

@@ -50,7 +50,7 @@ class Net(nn.Module):
         return x , x1, x2
 
 
-def train_network(model, train_input, train_target, train_classes, mini_batch_size):
+def train_network(model, train_input, train_target, train_classes, mini_batch_size,w=0.5):
     train_target_One_Hot = torch.eye(2)[train_target]
 
     # Specify the loss function
@@ -67,7 +67,6 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
     optimizer = torch.optim.Adam(model.parameters(), lr=eta, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
     #optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
-    
     loss_record_total=[]
     loss_record_classifier=[]
     for e in range(epochs):
@@ -80,19 +79,19 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
             l =[0, 1]
             for x,i in zip(y,l):
                 # For each image (since there are 2 channels)
-                loss_classifier = criterion_classifier(x , train_classes[:,i].narrow(0, b, mini_batch_size))
+                loss_classifier = w*criterion_classifier(x , train_classes[:,i].narrow(0, b, mini_batch_size))
                 sum_loss_classifier += loss_classifier.item()
                 loss_classifier.backward(retain_graph=True)
 
-            loss_total = criterion_total(output, train_target_One_Hot.narrow(0, b, mini_batch_size))
+            loss_total = (1-w)*criterion_total(output, train_target_One_Hot.narrow(0, b, mini_batch_size))
             sum_loss_total += loss_total.item()
             loss_total.backward()
 
             optimizer.step()
         loss_record_total.append(sum_loss_total)
         loss_record_classifier.append(sum_loss_classifier)
-        print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
-        print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
+        #print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
+        #print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
 
     return model, loss_record_total , loss_record_classifier
 
@@ -119,19 +118,20 @@ def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
 def main():
     # Define the mini_batch size (A PLACER DANS LE MASTER)
     mini_batch_size = 100
+    # Run grid search on weighting on the losses - 0.5 seems best
+    for w in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
+        # Create an instance of the network
+        basicModel = Net()
+        num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
+        #print('Number of trainable parameters:',num_param)  
 
-    # Create an instance of the network
-    basicModel = Net()
-    num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
-    print('Number of trainable parameters:',num_param)  
+        # Train the network
+        basicModel, _, _ = train_network(basicModel,train_input, train_target, train_classes, mini_batch_size,w=w)
+        #print(type(basicModel))
 
-    # Train the network
-    basicModel, _, _ = train_network(basicModel,train_input, train_target, train_classes, mini_batch_size)
-    print(type(basicModel))
-
-    # Evaluate the performance of the model
-    res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
-    print('Error rate of the model: ',res,'%')
+        # Evaluate the performance of the model
+        res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
+        print('Error rate of the model: ',res,'%, weight:', w) 
 
 if __name__ == "__main__":
     main()

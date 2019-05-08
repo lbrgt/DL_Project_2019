@@ -65,7 +65,6 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
 
     #Define optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=eta, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
-    #optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
     loss_record_total=[]
     loss_record_classifier=[]
@@ -88,10 +87,11 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
             loss_total.backward()
 
             optimizer.step()
+
         loss_record_total.append(sum_loss_total)
         loss_record_classifier.append(sum_loss_classifier)
-        #print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
-        #print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
+        print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
+        print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
 
     return model, loss_record_total , loss_record_classifier
 
@@ -118,20 +118,21 @@ def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
 def main():
     # Define the mini_batch size (A PLACER DANS LE MASTER)
     mini_batch_size = 100
-    # Run grid search on weighting on the losses - 0.5 seems best
-    for w in [0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]:
-        # Create an instance of the network
-        basicModel = Net()
-        num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
-        #print('Number of trainable parameters:',num_param)  
+    #Define the weighting between the losses
+    w=0.5
 
-        # Train the network
-        basicModel, _, _ = train_network(basicModel,train_input, train_target, train_classes, mini_batch_size,w=w)
-        #print(type(basicModel))
+    # Create an instance of the network
+    basicModel = Net()
+    num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
+    print('Number of trainable parameters:',num_param)  
 
-        # Evaluate the performance of the model
-        res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
-        print('Error rate of the model: ',res,'%, weight:', w) 
+    # Train the network
+    basicModel, _, _ = train_network(basicModel,train_input, train_target, train_classes, mini_batch_size,w=w)
+    print(type(basicModel))
+
+    # Evaluate the performance of the model
+    res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
+    print('Error rate of the model: ',res) 
 
 if __name__ == "__main__":
     main()

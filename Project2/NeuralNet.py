@@ -2,7 +2,7 @@ import torch
 import math
 #%%
 
-class SGDOptimizer:
+class SGDOptimizer: # NOTE - tried to implement it, not functional yet 
     def __init__(self, eta=0.1, momentum= 0.9):
         self.layer_memory = dict()
         self.step_size = eta
@@ -63,13 +63,9 @@ class DLModule:
         self.layer = []
         self.optmizer = optmizer
         if layer :
-            for item in layer: 
-                if hasattr(item, 'forward') and hasattr(item, 'backward'):
-                    self.layer.append(item)  
-                else: 
-                    raise Exception("The specified argument should implement forward() and backward() methods")
+            self.sequential(layer) # NOTE - use sequential() internally to avoid code duplicate
 
-    def __str__(self):
+    def __str__(self): # NOTE - add a print overload to easily display the stored architecture 
         value = 'Model architecture:\n'
         for layer in self.layer:
             value += str(layer) 
@@ -80,7 +76,7 @@ class DLModule:
                 value += '\n'
         return value
 
-    def displayParameters(self):
+    def displayParameters(self): # NOTE - display the network's parameters values 
         value = "Model's parameters:\n\n"
         for layer in self.layer:
             if type(layer).__name__ is 'Linear':
@@ -93,14 +89,14 @@ class DLModule:
         print(value) 
         return value 
 
-    def sequential(self, *args):
-        for item in list(args): 
+    def sequential(self, layer):
+        for item in layer: 
             if hasattr(item, 'forward') and hasattr(item, 'backward'):
                 self.layer.append(item)  
             else: 
                 raise Exception("The specified argument should implement forward() and backward() methods") 
 
-    def __call__(self, input): #def forward(self , input):
+    def __call__(self, input): # NOTE - replaced function name to match PyTorch's convention (instead of "forward") 
         for node in self.layer:
             #print(node)
             input = node.forward(input)
@@ -117,29 +113,21 @@ class DLModule:
         for layer in self.layer:
             try:
                 self.optimizer(layer) 
-                #layer.zero_grad() 
+                #layer.zero_grad() # NOTE - zero_grad should not be handled here -> user calls it when training! see next Note 
             except:
                 pass
     
-    def zero_grad(self): # NOTE - required for training 
+    def zero_grad(self): # NOTE - required for training, called by user
         for layer in self.layer:
             if type(layer).__name__ is 'Linear':
                 layer.zero_grad()
-'''
-class Master():
-    def forward(self):
-        raise NotImplementedError
 
-    def backward(self):
-        raise NotImplementedError
-'''
 
 class LossMSE:
-
     def __init__(self):
         self.loss = None
 
-    def __call__(self, output, target): # compute_loss - NOTE: replaced name 
+    def __call__(self, output, target): # compute_loss - NOTE: replaced function name 
         '''
             Both inputs must satisfy .view(-1,1)
             Returns a list of 2 tensors
@@ -168,7 +156,7 @@ class Tanh:
     def backward(self, dl_dx):
         return dl_dx * self.evald(self.input)   
 
-class Sigmoid:
+class Sigmoid: # NOTE - added activation (usefull to squish the final output between 0 and 1)
     def eval(self, x):
         return torch.sigmoid(x)
 

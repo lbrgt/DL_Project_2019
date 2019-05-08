@@ -7,37 +7,35 @@ import torch
 from NeuralNet import DLModule, LossMSE, Tanh, Sigmoid, Relu, Linear, SGDOptimizer, AdamOptimizer
 import data_generator as dg 
 
-# Disable torch functionnalities 
+# Disable torch's gradient functionnalities 
 torch.set_grad_enabled(False)
 
 # Generate the dataset 
 num_samples = 1000
 train_input, train_target, test_input, test_target = dg.generate_dataset(num_samples) 
 
-# Instanciate the model
-eta = 0.1 
-momentum = 0.9
+# Instanciate a model 
 model = DLModule(
     Linear(2,3),
     Tanh(),
     Linear(3,1),
     Sigmoid(),
-    optmizer=SGDOptimizer(eta,momentum)
+    optmizer=SGDOptimizer(eta=0.1,momentum=0.9)
 )
 # Display its architecture
 print(model)
 # Display its parmeters
 model.displayParameters()
 
-# Visualize model's initial behaviour with this lambda function
-showBehaviour = lambda model,input: dg.plotDataset(input,(model(test_input) < 0.5).int().view(-1)) 
-#showBehaviour(model,test_input)
+# Visualize the model's initial behaviour 
+showBehaviour = lambda model,input: dg.plotDataset(input,(model(input) < 0.5).int().view(-1)) 
+showBehaviour(model,test_input)
 
 # Define a loss - NOTE: only has to be instantiated once now
 criterion = LossMSE()
 
 # Train the network
-epochs = 5
+epochs = 5 
 mini_batch_size = 100
 for e in range(epochs):
     sum_loss = 0
@@ -45,12 +43,11 @@ for e in range(epochs):
     for b in range(0, train_input.size(0), mini_batch_size):
         output = model(train_input.narrow(0, b, mini_batch_size))
         loss = criterion(output, train_target.narrow(0, b, mini_batch_size))
-        # print(loss[0].item(), loss[1])
-        sum_loss = sum_loss + loss[0].item()
+        sum_loss = sum_loss + loss[0].item() # NOTE - loss a bit dirty but okay? 
         model.zero_grad()
         model.backward(loss)  
         model.update() 
-    #print(e, '-', sum_loss)
+    print(e, '-', sum_loss)
 
 
 #showBehaviour(model,test_input)    

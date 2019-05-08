@@ -190,10 +190,13 @@ def plot_statistics(keys:np.array,stats:np.array):
 def generate_statistics():
     global nows_noil_model,nows_il_model,ws_noil_model,ws_il_model,\
         ws_il_sep_model_parallel,ws_il_sep_model_analyzer
+
+    global train_input, train_target, train_classes, test_input, test_target, test_classes
     
     res_final_stat = []
     for i in range(10):
         # Reintialize each network
+        train_input, train_target, train_classes, test_input, test_target, test_classes = prologue.generate_pair_sets(nb)
         nows_noil_model = NoWS_NoIL.Net()
         nows_il_model   = NoWS_IL.Net()
         ws_noil_model   = WS_NoIL.Net()

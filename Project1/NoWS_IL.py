@@ -51,7 +51,7 @@ class Net(nn.Module):
         return x , x1, x2
 
 
-def train_network(model, train_input, train_target, train_classes, mini_batch_size):
+def train_network(model, train_input, train_target, train_classes, mini_batch_size, w=0.8):
     train_target_One_Hot = torch.eye(2)[train_target]
 
     # Specify the loss function
@@ -80,11 +80,11 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
             l =[0, 1]
             for x,i in zip(y,l):
                 # For each image (since there are 2 channels)
-                loss_classifier = criterion_classifier(x , train_classes[:,i].narrow(0, b, mini_batch_size))
+                loss_classifier = w*criterion_classifier(x , train_classes[:,i].narrow(0, b, mini_batch_size))
                 sum_loss_classifier += loss_classifier.item()
                 loss_classifier.backward(retain_graph=True)
 
-            loss_total = criterion_total(output, train_target_One_Hot.narrow(0, b, mini_batch_size))
+            loss_total = (1-w)*criterion_total(output, train_target_One_Hot.narrow(0, b, mini_batch_size))
             sum_loss_total += loss_total.item()
             loss_total.backward()
 
@@ -93,8 +93,8 @@ def train_network(model, train_input, train_target, train_classes, mini_batch_si
                 #p.data.sub_(step[e]* p.grad.data)   
         loss_record_total.append(sum_loss_total)
         loss_record_classifier.append(sum_loss_classifier)
-        print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
-        print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
+        #print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
+        #print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
 
     return model, loss_record_total , loss_record_classifier
 
@@ -122,14 +122,17 @@ def main():
     # Define the mini_batch size (A PLACER DANS LE MASTER)
     mini_batch_size = 100
 
+    #Define the weighting between the losses
+    w=0.8
+  
     # Create an instance of the network
     basicModel = Net()
     num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
-    print('Number of trainable parameters:',num_param)  
+    #print('Number of trainable parameters:',num_param)  
 
     # Train the network
-    basicModel, _, _ = train_network(basicModel,train_input, train_target, train_classes, mini_batch_size)
-    print(type(basicModel))
+    basicModel, _, _ = train_network(basicModel,train_input, train_target, train_classes, mini_batch_size,w)
+    #print(type(basicModel))
 
     # Evaluate the performance of the model
     res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)

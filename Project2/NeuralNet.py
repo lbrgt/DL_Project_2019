@@ -113,13 +113,11 @@ class DLModule:
             output = node.backward(output)   
         #print(output)
 
-    def update(self,eta=None):
-        if eta == None:
-            raise Exception("Error: a learing must be provided to update the parameters") 
-        for node in self.layer:
+    def update(self):
+        for layer in self.layer:
             try:
                 self.optimizer(layer) 
-                #node.zero_grad()
+                #layer.zero_grad() 
             except:
                 pass
     
@@ -244,7 +242,7 @@ class Linear:
 
     def update_param(self, eta):
         self.weight -= eta*self.dl_dw_cumulative
-        self.bias   -= eta*self.dl_db_cumulative
+        self.bias   -= eta*self.dl_db_cumulative 
         
     def zero_grad(self):
         self.dl_dw_cumulative.fill_(0)

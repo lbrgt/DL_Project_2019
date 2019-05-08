@@ -10,7 +10,7 @@ import data_generator as dg
 # Disable torch functionnalities 
 torch.set_grad_enabled(False)
 
-# Generate the dataset
+# Generate the dataset 
 num_samples = 1000
 train_input, train_target, test_input, test_target = dg.generate_dataset(num_samples) 
 
@@ -38,7 +38,6 @@ criterion = LossMSE()
 
 # Train the network
 epochs = 5
-
 mini_batch_size = 100
 for e in range(epochs):
     sum_loss = 0
@@ -50,7 +49,7 @@ for e in range(epochs):
         sum_loss = sum_loss + loss[0].item()
         model.zero_grad()
         model.backward(loss)  
-        model.update(eta) 
+        model.update() 
     #print(e, '-', sum_loss)
 
 

@@ -104,10 +104,10 @@ class DLModule:
     
     def backward(self, loss:list): # NOTE - Provide a list with loss and dloss !
         output = loss[1] # dloss 
+        #print('Backward (dloss):',output.shape)
         for node in list(reversed(self.layer)):
-            #print(output)
             output = node.backward(output)   
-        #print(output)
+            #print('Backward:',output.shape)
 
     def update(self):
         for layer in self.layer:
@@ -129,11 +129,11 @@ class LossMSE:
 
     def __call__(self, output, target): # compute_loss - NOTE: replaced function name 
         '''
-            Both inputs must satisfy .view(-1,1)
-            Returns a list of 2 tensors
+            Both output and target must satisfy .view(-1,"size of sample")
+            Returns a list of 2 tensors [loss dloss] 
         '''
-        self.loss = self.eval(output.view(-1,1), target.view(-1,1))
-        self.dloss = self.evald(output.view(-1,1), target.view(-1,1))
+        self.loss = self.eval(output, target)
+        self.dloss = self.evald(output, target)
         return [self.loss, self.dloss]
 
     def eval(self, output, target):

@@ -29,7 +29,7 @@ model.displayParameters()
 
 # Visualize the model's initial behaviour 
 showBehaviour = lambda model,input: dg.plotDataset(input,(model(input) < 0.5).int().view(-1)) 
-showBehaviour(model,test_input)
+#showBehaviour(model,test_input)
 
 # Define a loss - NOTE: only has to be instantiated once now
 criterion = LossMSE()
@@ -42,15 +42,16 @@ for e in range(epochs):
     # We do this with mini-batches
     for b in range(0, train_input.size(0), mini_batch_size):
         output = model(train_input.narrow(0, b, mini_batch_size))
-        loss = criterion(output, train_target.narrow(0, b, mini_batch_size))
+        loss = criterion(output, train_target.narrow(0, b, mini_batch_size).view(-1,1))
         sum_loss = sum_loss + loss[0].item() # NOTE - loss a bit dirty but okay? 
         model.zero_grad()
         model.backward(loss)  
         model.update() 
+         
     print(e, '-', sum_loss)
 
 
-#showBehaviour(model,test_input)    
+showBehaviour(model,test_input)    
 
 
 

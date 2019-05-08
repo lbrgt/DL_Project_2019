@@ -6,8 +6,7 @@ from torch.autograd import Variable
 from torch import nn
 from torch.nn import functional as F
 
-from sub_modules import Parallel_Net, Analyzer_Net, \
-        generateComputationalTree
+from sub_modules import Parallel_Net, Analyzer_Net 
 
 ####################################################################################################
 '''

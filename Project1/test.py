@@ -165,8 +165,6 @@ def eval_all():
 
     # Return a dictionary of the performances:
     res_class = {
-        #'nows_il':nows_il_res_class,
-        #'ws_il':ws_il_res_class,
         'ws_il_sep':ws_il_sep_res_class
     }
     res_final= {
@@ -225,7 +223,6 @@ def generate_statistics():
 def computeErrorRateSTD(keys:np.array, stats:np.array):
     # stats is (10,6) array -> compute std along columns
     stds  = np.std(stats,axis=0)
-    #print('Standard deviation of each architecture:',stds)
 
     plt.figure()
     plt.scatter(keys,stds)

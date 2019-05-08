@@ -48,27 +48,3 @@ class Analyzer_Net(nn.Module):
         x = self.fc5(x)
         return x
 
-
-# Evaluate the network's performance with winner takes it all approach
-def evaluateClassIdentification(model, test_input, test_classes, mini_batch_size):
-    error = 0
-    for b in range(0, test_input.size(0), mini_batch_size):
-        output = model(test_input[:,0].view(-1,1,14,14).narrow(0, b, mini_batch_size))
-        
-        c_array = output.argmax(1)
-        t_array = test_classes[:,0][b:b+mini_batch_size]
-        error += (c_array-t_array).nonzero().size()[0]
-        
-    return error/test_input.size()[0]*100
-
-#Generation of the computational tree
-def generateComputationalTree():
-    global train_input
-    basicModel = BasicNet()
-    output = basicModel(train_input.narrow(0, 0, 1))
-    criterion = nn.MSELoss()
-    loss = criterion(output, train_target.narrow(0, 0, 1))
-    loss.backward()
-    # Save the computation tree for later rendering using dot.exe
-    ag.save_dot(loss,{},open('./mlp.dot', 'w')) 
-

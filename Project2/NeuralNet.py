@@ -3,12 +3,12 @@ import math
 #%%
 
 class SGDOptimizer:
-    def __init__(self, step_size=0.1, momentum= 0.9):
+    def __init__(self, eta=0.1, momentum= 0.9):
         self.layer_memory = dict()
-        self.step_size = step_size
+        self.step_size = eta
         self.momentum = momentum
 
-    def step(self, layer):
+    def __call__(self, layer):
         g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
 
         if layer in self.layer_memory:
@@ -17,10 +17,45 @@ class SGDOptimizer:
             u_t_1 = torch.empty(g.shape).fill_(0)
         
         w = torch.cat([layer.weight, layer.bias], 0)
-        u_t = self.momentum*u_t_1 + self.step_size * g
+        u_t = self.momentum*u_t_1 - self.step_size * g
+        layer.weight += u_t[:-1,:]  #truc[:-1,:]
+        layer.bias += u_t[-1,:]     #truc[-1,:]
+        self.layer_memory[layer] = u_t
+
+class AdamOptimizer:
+    def __init__(self, beta_1=0.1, beta_2=0.1, step_size=0.1, epsilon=0.1):
+        self.layer_memory_m = dict()
+        self.layer_memory_v = dict()
+        self.beta_1 = beta_1
+        self.beta_2 = beta_2
+        self.step_size = step_size
+        self.epsilon = epsilon
+
+    def __call__(self, layer):
+        g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
+
+        if layer in self.layer_memory_g:
+            m_t_1 = self.layer_memory_m[layer]
+            v_t_1 = self.layer_memory_v[layer]
+        else:
+            m_t_1 = torch.empty(g.shape).fill_(0)
+            v_t_1 = torch.empty(g.shape).fill_(0)
+
+        m_t = self.beta_1 * m_t_1 + (1 - self.beta_1) * g
+        v_t = self.beta_2 * v_t_1+ (1 - selfbeta_2) * torch.pow(g, 2)
+        m_hat = m_t / (1 - self.beta_1)
+        v_hat = v_t / (1 - self.beta_2)
+
+        w = torch.cat([layer.weight, layer.bias], 0)
+
+        truc = w - step_size * m_hat / (torch.sqrt(v_hat) + self.epsilon)
+
         layer.weight = truc[:-1,:]
         layer.bias = truc[-1,:]
-        self.layer_memory[layer] = u_t
+
+        self.layer_memory_m[layer] = m_t
+        self.layer_memory_v[layer] = v_t
+            
 
 class DLModule:  
 
@@ -83,8 +118,8 @@ class DLModule:
             raise Exception("Error: a learing must be provided to update the parameters") 
         for node in self.layer:
             try:
-                self.optimizer() 
-                node.zero_grad()
+                self.optimizer(layer) 
+                #node.zero_grad()
             except:
                 pass
     
@@ -202,8 +237,9 @@ class Linear:
         dl_dx = dl_ds @ self.weight.transpose(0,1)
         self.dl_dw_cumulative += self.input_previous.transpose(0,1) @ dl_ds
         self.dl_db_cumulative += dl_ds.sum(0)
-        #print(self.dl_db_cumulative)
-        #print(self.dl_dw_cumulative)
+        
+        #print(self.dl_db_cumulative.size())
+        #print(self.dl_dw_cumulative.size())
         return dl_dx
 
     def update_param(self, eta):
@@ -213,40 +249,5 @@ class Linear:
     def zero_grad(self):
         self.dl_dw_cumulative.fill_(0)
         self.dl_db_cumulative.fill_(0)
-
-class AdamOptimizer:
-    def __init__(self, beta_1=0.1, beta_2=0.1, step_size=0.1, epsilon=0.1):
-        self.layer_memory_m = dict()
-        self.layer_memory_v = dict()
-        self.beta_1 = beta_1
-        self.beta_2 = beta_2
-        self.step_size = step_size
-        self.epsilon = epsilon
-
-    def step(self, layer):
-        g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
-
-        if layer in self.layer_memory_g:
-            m_t_1 = self.layer_memory_m[layer]
-            v_t_1 = self.layer_memory_v[layer]
-        else:
-            m_t_1 = torch.empty(g.shape).fill_(0)
-            v_t_1 = torch.empty(g.shape).fill_(0)
-
-        m_t = self.beta_1 * m_t_1 + (1 - self.beta_1) * g
-        v_t = self.beta_2 * v_t_1+ (1 - selfbeta_2) * torch.pow(g, 2)
-        m_hat = m_t / (1 - self.beta_1)
-        v_hat = v_t / (1 - self.beta_2)
-
-        w = torch.cat([layer.weight, layer.bias], 0)
-
-        truc = w - step_size * m_hat / (torch.sqrt(v_hat) + self.epsilon)
-
-        layer.weight = truc[:-1,:]
-        layer.bias = truc[-1,:]
-
-        self.layer_memory_m[layer] = m_t
-        self.layer_memory_v[layer] = v_t
-    
 
 #%%

@@ -15,10 +15,14 @@ num_samples = 1000
 train_input, train_target, test_input, test_target = dg.generate_dataset(num_samples) 
 
 # Instanciate the model
+eta = 0.1 
+momentum = 0.9
 model = DLModule(
-    Linear(2,1),
+    Linear(2,3),
+    Tanh(),
+    Linear(3,1),
     Sigmoid(),
-    optmizer=SGDOptimizer(),
+    optmizer=SGDOptimizer(eta,momentum)
 )
 # Display its architecture
 print(model)
@@ -27,17 +31,16 @@ model.displayParameters()
 
 # Visualize model's initial behaviour with this lambda function
 showBehaviour = lambda model,input: dg.plotDataset(input,(model(test_input) < 0.5).int().view(-1)) 
-showBehaviour(model,test_input)
+#showBehaviour(model,test_input)
 
 # Define a loss - NOTE: only has to be instantiated once now
 criterion = LossMSE()
 
 # Train the network
 epochs = 5
-eta = 0.1 
+
 mini_batch_size = 100
 for e in range(epochs):
-    break
     sum_loss = 0
     # We do this with mini-batches
     for b in range(0, train_input.size(0), mini_batch_size):
@@ -48,7 +51,10 @@ for e in range(epochs):
         model.zero_grad()
         model.backward(loss)  
         model.update(eta) 
-    print(e, '-', sum_loss)
+    #print(e, '-', sum_loss)
+
+
+#showBehaviour(model,test_input)    
 
 
 

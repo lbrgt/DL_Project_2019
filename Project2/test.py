@@ -35,7 +35,7 @@ showBehaviour = lambda model,input: dg.plotDataset(input,(model(input) < 0.5).in
 criterion = LossMSE()
 
 # Train the network
-epochs = 5 
+epochs = 500
 mini_batch_size = 100
 for e in range(epochs):
     sum_loss = 0

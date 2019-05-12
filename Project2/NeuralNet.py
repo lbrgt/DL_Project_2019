@@ -9,7 +9,7 @@ class SGDOptimizer:
         self.momentum = momentum
 
     def step(self, layer):
-        g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
+        g = torch.cat([layer.dl_dw_cumulative, la   yer.dl_db_cumulative],0)
 
         if layer in self.layer_memory:
             u_t_1 = self.layer_memory[layer]

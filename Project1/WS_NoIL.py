@@ -14,7 +14,7 @@ from sub_modules import Parallel_Net, Analyzer_Net
 '''
 Construction of the basic net with :
 
-    - No weight sharing
+    - Weight sharing
 
     - No intermediate/auxiliary loss
 
@@ -31,8 +31,7 @@ train_input, train_target, train_classes, test_input, test_target, test_classes 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.parallel_net1 = Parallel_Net()
-        self.parallel_net2 = Parallel_Net()
+        self.parallel_net = Parallel_Net()
         self.analyser_net  = Analyzer_Net()
     
     def forward(self,x):
@@ -41,8 +40,8 @@ class Net(nn.Module):
         x2 = x[:,1,:,:].view(-1,1,14,14)
 
         # No weight sharing (declare 2 distinct instances of Parallel_Net)
-        x1 = self.parallel_net1(x1)
-        x2 = self.parallel_net2(x2)
+        x1 = self.parallel_net(x1)
+        x2 = self.parallel_net(x2)
 
         # Concatenate back both classification results 
         x = torch.cat((x1.view(-1,10),x2.view(-1,10)),dim=1)
@@ -59,11 +58,9 @@ def train_network(model, train_input, train_target, mini_batch_size):
     # Define the number of epochs to train the network
     epochs = 25
     
-    # Set the learning rate
+   # Set the learning rate
     eta = 0.1
-
-    #Define optimizer
-    optimizer = torch.optim.SGD(model.parameters(), lr=eta, momentum=0.0)
+    optimizer = torch.optim.SGD(model.parameters(), lr = eta, momentum = 0.0)
 
     loss_record=[]
     for e in range(epochs):
@@ -74,9 +71,8 @@ def train_network(model, train_input, train_target, mini_batch_size):
             sum_loss = sum_loss + loss.item()
             model.zero_grad()
             loss.backward()
-
+            
             optimizer.step()
-
         loss_record.append(sum_loss)
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     return model, loss_record

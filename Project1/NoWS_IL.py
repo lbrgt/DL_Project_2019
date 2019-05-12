@@ -16,7 +16,7 @@ Construction of the basic net with :
 
     - No weight sharing
 
-    - No intermediate/auxiliary loss
+    - Intermediate/auxiliary loss
 
 Definition of the corresponding training function, test of the resulting net.    
 
@@ -48,38 +48,54 @@ class Net(nn.Module):
         x = torch.cat((x1.view(-1,10),x2.view(-1,10)),dim=1)
         x = self.analyser_net(x)
 
-        return x 
+        return x , x1, x2
 
 
-def train_network(model, train_input, train_target, mini_batch_size):
+def train_network(model, train_input, train_target, train_classes, mini_batch_size, w=0.8):
     train_target_One_Hot = torch.eye(2)[train_target]
+
     # Specify the loss function
-    criterion = nn.MSELoss()
+    criterion_total = nn.MSELoss()
+    criterion_classifier = nn.CrossEntropyLoss()
 
     # Define the number of epochs to train the network
     epochs = 25
-    
+
     # Set the learning rate
-    eta = 0.1
+    eta = 0.01
 
     #Define optimizer
-    optimizer = torch.optim.SGD(model.parameters(), lr=eta, momentum=0.0)
-
-    loss_record=[]
+    optimizer = torch.optim.Adam(model.parameters(), lr=eta, betas=(0.9, 0.999), eps=1e-08, weight_decay=0, amsgrad=False)
+    
+    loss_record_total=[]
+    loss_record_classifier=[]
     for e in range(epochs):
-        sum_loss = 0
+        sum_loss_total = 0
+        sum_loss_classifier = 0
         for b in range(0, train_input.size(0), mini_batch_size):
-            output = model(train_input.narrow(0, b, mini_batch_size)) # dim,start,length
-            loss = criterion(output, train_target_One_Hot.narrow(0, b, mini_batch_size))
-            sum_loss = sum_loss + loss.item()
             model.zero_grad()
-            loss.backward()
+            output, x1, x2 = model(train_input.narrow(0, b, mini_batch_size)) # dim,start,length
+            y = [x1, x2]
+            l =[0, 1]
+            for x,i in zip(y,l):
+                # For each image (since there are 2 channels)
+                loss_classifier = w*criterion_classifier(x , train_classes[:,i].narrow(0, b, mini_batch_size))
+                sum_loss_classifier += loss_classifier.item()
+                loss_classifier.backward(retain_graph=True)
+
+            loss_total = (1-w)*criterion_total(output, train_target_One_Hot.narrow(0, b, mini_batch_size))
+            sum_loss_total += loss_total.item()
+            loss_total.backward()
 
             optimizer.step()
+              
+        loss_record_total.append(sum_loss_total)
+        loss_record_classifier.append(sum_loss_classifier)
+        print('Sum of classifier loss at epoch {}: \t'.format(e),sum_loss_classifier)  
+        print('Sum of total loss at epoch {}: \t'.format(e),sum_loss_total)  
 
-        loss_record.append(sum_loss)
-        print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
-    return model, loss_record
+    return model, loss_record_total , loss_record_classifier
+
 
       
 def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
@@ -88,7 +104,7 @@ def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
     with torch.no_grad():
         error = 0
         for b in range(0, test_input.size(0), mini_batch_size):
-            output = model(test_input.narrow(0, b, mini_batch_size))
+            output, _, _ = model(test_input.narrow(0, b, mini_batch_size))
             for i in range(output.size(0)):
                 if torch.argmax(output[i]) == 1:
                     if test_target.narrow(0, b, mini_batch_size)[i].item() < 0.2:
@@ -104,21 +120,24 @@ def main():
     # Define the mini_batch size (A PLACER DANS LE MASTER)
     mini_batch_size = 100
 
+    #Define the weighting between the losses
+    w=0.8
+  
     # Create an instance of the network
     basicModel = Net()
     num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)
     print('Number of trainable parameters:',num_param)  
 
     # Train the network
-    basicModel, loss_record = train_network(basicModel,train_input, train_target, mini_batch_size)
-
+    basicModel, _, _ = train_network(basicModel, train_input, train_target, train_classes, mini_batch_size, w)
+    print(type(basicModel))
 
     # Evaluate the performance of the model
     res = evaluateFinalOutput(basicModel,test_input,test_target,mini_batch_size)
     print('Error rate of the model: ',res,'%')
 
+
 if __name__ == "__main__":
     main()
-
 
 

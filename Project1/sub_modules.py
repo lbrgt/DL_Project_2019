@@ -47,46 +47,4 @@ class Analyzer_Net(nn.Module):
         x = torch.tanh(self.fc4(x))
         x = self.fc5(x)
         return x
-      
-def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
-    test_target = test_target.type(torch.FloatTensor)
-    
-    with torch.no_grad():
-        error = 0
-        for b in range(0, test_input.size(0), mini_batch_size):
-            output = model(test_input.narrow(0, b, mini_batch_size))
-            for i in range(output.size(0)):
-                if torch.argmax(output[i]) == 1:
-                    if test_target.narrow(0, b, mini_batch_size)[i].item() < 0.2:
-                        error += 1
-                elif torch.argmax(output[i]) == 0:
-                    if test_target.narrow(0, b, mini_batch_size)[i].item() > 0.8:
-                        error += 1
-                else:
-                    error += 1
-    return error/test_target.size(0)*100
-
-
-# Evaluate the network's performance with winner takes it all approach
-def evaluateClassIdentification(model, test_input, test_classes, mini_batch_size):
-    error = 0
-    for b in range(0, test_input.size(0), mini_batch_size):
-        output = model(test_input[:,0].view(-1,1,14,14).narrow(0, b, mini_batch_size))
-        
-        c_array = output.argmax(1)
-        t_array = test_classes[:,0][b:b+mini_batch_size]
-        error += (c_array-t_array).nonzero().size()[0]
-        
-    return error/test_input.size()[0]*100
-
-#Generation of the computational tree
-def generateComputationalTree():
-    global train_input
-    basicModel = BasicNet()
-    output = basicModel(train_input.narrow(0, 0, 1))
-    criterion = nn.MSELoss()
-    loss = criterion(output, train_target.narrow(0, 0, 1))
-    loss.backward()
-    # Save the computation tree for later rendering using dot.exe
-    ag.save_dot(loss,{},open('./mlp.dot', 'w')) 
 

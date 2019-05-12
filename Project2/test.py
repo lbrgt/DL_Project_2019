@@ -18,19 +18,22 @@ train_input, train_target, test_input, test_target = dg.generate_dataset(num_sam
 # Instanciate a model 
 model = DLModule(
     Linear(2,3),
-    Tanh(),
+    Relu(),
     Linear(3,1),
     Sigmoid(),
-    optmizer=SGDOptimizer(eta=0.1,momentum=0.9)
+    optimizer=SGDOptimizer(eta=0.001,momentum=0.00)
 )
 # Display its architecture
 print(model)
 # Display its parmeters
 model.displayParameters()
+#%%
 
 # Visualize the model's initial behaviour 
 showBehaviour = lambda model,input: dg.plotDataset(input,(model(input) < 0.5).int().view(-1)) 
 #showBehaviour(model,test_input)
+
+#%%
 
 # Define a loss - NOTE: only has to be instantiated once now
 criterion = LossMSE()
@@ -54,48 +57,56 @@ for e in range(epochs):
 
 showBehaviour(model,test_input)    
 
-
-
-
-'''
-# Define a batch of training samples and do a forward pass 
-train_input = torch.Tensor([[1,1],[2,2]])
-train_output = model.forward(train_input)
-print(train_output)
-
-# Define a batch of training targets
-train_target = torch.Tensor([[1,1,1],[2,2,2]])
-
-
-
-# Compute the loss 
-loss = lossMSE.compute_loss(train_target, train_output) 
-
-# Backward pass
-model.backward(loss) # NOTE - Should only provide values, not instance! 
-
-# Update the model
-model.update(eta=0.1)
-'''
 #%%
-'''
-b = torch.Tensor([[1,1],[2,2]])
-output = nn.forward_pass(b)
 
-#%%
-target = torch.Tensor([[1,1,1],[2,2,2 ]])
+# Instanciate a model 
+model_test = DLModule(
+    Linear(2,1),
+    Relu(),
+    optimizer=SGDOptimizer(eta=0.1,momentum=0.0)
+)
 
-lossMSE = LossMSE()
 
-lossMSE.compute_loss(target, output)
+model_test.displayParameters()
 
-nn.backward_pass(lossMSE)
-#%%
-nn.update(0.1)
+out = model_test(torch.Tensor([[1,1],[2,2]]))
+criterion = LossMSE()
+
+loss  = criterion(out, torch.Tensor([[1.0000],[1.0000]]))
+
+model_test.backward(loss)
+print(model_test.layer[0].weight)
+
+
+
+model_test.update()
 
 
 #%%
-nn.layer[0].zero_grad()
-nn.layer[0].dl_db_cumulative
+
+print(model_test.layer[2].dl_dw_cumulative)
+
+
 #%%
-'''
+out = model_test(torch.Tensor([[1,1],[2,2]]))
+
+loss  = criterion(out, torch.Tensor([[1.0000],[1.0000]]))
+
+model_test.backward(loss)
+print(model_test.layer[0].weight)
+
+
+
+model_test.update()
+
+#%%
+print(model_test.layer[0].weight)
+
+
+#%%
+
+
+#%%
+
+
+#%%

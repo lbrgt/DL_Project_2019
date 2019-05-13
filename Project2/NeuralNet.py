@@ -113,7 +113,7 @@ class DLModule:
         for layer in self.layer:
             try:
                 #self.optimizer(layer) 
-                layer.update_param(0.01)
+                layer.update_param(0.02)
                 #layer.zero_grad() # NOTE - zero_grad should not be handled here -> user calls it when training! see next Note 
             except:
                 pass

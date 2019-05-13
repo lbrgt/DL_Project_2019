@@ -28,7 +28,7 @@ print(model)
 model.displayParameters()
 
 # Visualize the model's initial behaviour 
-showBehaviour = lambda model,input: dg.plotDataset(input,(model(input) < 0.5).int().view(-1)) 
+showBehaviour = lambda model,input: dg.plotDataset(input,(model(input) > 0.5).int().view(-1)) 
 #showBehaviour(model,test_input)
 
 # Define a loss - NOTE: only has to be instantiated once now

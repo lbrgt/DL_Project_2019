@@ -2,8 +2,8 @@ import torch
 import math
 #%%
 
-class SGDOptimizer: # NOTE - tried to implement it, not functional yet 
-    def __init__(self, eta=0.1, momentum= 0.9):
+class SGDOptimizer: 
+    def __init__(self, eta=0.01, momentum= 0.9):
         self.layer_memory = dict()
         self.step_size = eta
         self.momentum = momentum
@@ -11,24 +11,18 @@ class SGDOptimizer: # NOTE - tried to implement it, not functional yet
 
     def __call__(self, layer):
         g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
-        # print(g)
         if layer in self.layer_memory:
             u_t_1 = self.layer_memory[layer]
-            # print('already known')
         else:
             u_t_1 = torch.empty(g.shape).fill_(0)
-            # print('new')
         
         u_t = self.momentum*u_t_1 + self.step_size * g
-        print(u_t)
-        layer.weight = layer.weight - u_t[:-1,:]  #truc[:-1,:]
-        layer.bias = layer.bias - u_t[-1,:]     #truc[-1,:]
-        print(layer.weight)
-        print(layer.bias)
+        layer.weight = layer.weight - u_t[:-1,:] 
+        layer.bias = layer.bias - u_t[-1,:]     
         self.layer_memory[layer] = u_t
 
 class AdamOptimizer:
-    def __init__(self, beta_1=0.1, beta_2=0.1, step_size=0.1, epsilon=0.1):
+    def __init__(self, beta_1=0.9, beta_2=0.99, step_size=0.001, epsilon=0.000001):
         self.layer_memory_m = dict()
         self.layer_memory_v = dict()
         self.beta_1 = beta_1
@@ -38,30 +32,25 @@ class AdamOptimizer:
 
     def __call__(self, layer):
         g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
-
-        if layer in self.layer_memory_g:
+        if layer in self.layer_memory_v:
             m_t_1 = self.layer_memory_m[layer]
             v_t_1 = self.layer_memory_v[layer]
         else:
             m_t_1 = torch.empty(g.shape).fill_(0)
             v_t_1 = torch.empty(g.shape).fill_(0)
-
         m_t = self.beta_1 * m_t_1 + (1 - self.beta_1) * g
         v_t = self.beta_2 * v_t_1+ (1 - self.beta_2) * torch.pow(g, 2)
         m_hat = m_t / (1 - self.beta_1)
         v_hat = v_t / (1 - self.beta_2)
 
         w = torch.cat([layer.weight, layer.bias], 0)
-
-        truc = w - step_size * m_hat / (torch.sqrt(v_hat) + self.epsilon)
+        truc = w - self.step_size * m_hat / (torch.sqrt(v_hat) + self.epsilon)
 
         layer.weight = truc[:-1,:]
-        layer.bias = truc[-1,:]
-
+        layer.bias = truc[-1,:].view(1,-1)
         self.layer_memory_m[layer] = m_t
         self.layer_memory_v[layer] = v_t
-            
-
+        
 class DLModule:  
 
     def __init__(self, *layer, optimizer = SGDOptimizer()):
@@ -102,47 +91,38 @@ class DLModule:
             else: 
                 raise Exception("The specified argument should implement forward() and backward() methods") 
 
-    def __call__(self, input): # NOTE - replaced function name to match PyTorch's convention (instead of "forward") 
+    def __call__(self, input):  
         for node in self.layer:
-            #print(node)
             input = node.forward(input)
         return input
     
-    def backward(self, loss:list): # NOTE - Provide a list with loss and dloss ! ?????
+    def backward(self, loss:list): 
         output = loss[1] # dloss 
-        # print('Backward (dloss):',output.shape)
         for node in list(reversed(self.layer)):
             output = node.backward(output)   
-            # print('Backward:',output.shape)
 
-    def update(self):
+    def update(self, *epoch):
         for layer in self.layer:
-            #print(layer)
-            # print(self.optimizer)
             try:
                 self.optimizer(layer) 
-                # print(layer)
-                # layer.update_param(0.01)
+                
             except Exception as e: 
-                # print(str(e))
                 pass
     
-    def zero_grad(self): # NOTE - required for training, called by user
+    def zero_grad(self):
         for layer in self.layer:
             if type(layer).__name__ is 'Linear':
                 layer.zero_grad()
-
 
 class LossMSE:
     def __init__(self):
         self.loss = None
 
-    def __call__(self, output, target): # compute_loss - NOTE: replaced function name 
+    def __call__(self, output, target): 
         '''
             Both output and target must satisfy .view(-1,"size of sample")
             Returns a list of 2 tensors [loss dloss] 
         '''
-        #print(output, target)
         self.loss = self.eval(output, target)
         self.dloss = self.evald(output, target)
         return [self.loss, self.dloss]
@@ -167,7 +147,7 @@ class Tanh:
     def backward(self, dl_dx):
         return dl_dx * self.evald(self.input)   
 
-class Sigmoid: # NOTE - added activation (usefull to squish the final output between 0 and 1)
+class Sigmoid: 
     def eval(self, x):
         return torch.sigmoid(x)
 
@@ -210,25 +190,18 @@ class Linear:
             grad_weight [input_dim x output_dim]
             grad_bias [1 x output_dim]
         '''
-        '''
+        
         std = math.sqrt(2.0 / (input_dim + output_dim))
         
-        self.weight = torch.empty((input_dim, output_dim)).normal_(0, std)
-        self.bias = torch.empty(1, output_dim).normal_(0, std)
-        self.dl_dw_cumulative = torch.empty(input_dim, output_dim).fill_(0)
+        self.weight =           torch.empty((input_dim, output_dim)).normal_(0, std)
+        self.bias =             torch.empty(1, output_dim).normal_(0, std)
+        self.dl_dw_cumulative = torch.empty((input_dim, output_dim)).fill_(0)
         self.dl_db_cumulative = torch.empty(1, output_dim).fill_(0)
         
-        ''' 
-        self.weight = torch.empty((input_dim, output_dim)).fill_(1)
-        self.bias = torch.empty(1, output_dim).fill_(1)
-        self.dl_dw_cumulative = torch.empty(input_dim, output_dim).fill_(0)
-        self.dl_db_cumulative = torch.empty(1, output_dim).fill_(0)
-
 
     
     def forward(self, x):
         self.input_previous = x
-        print('forward', x @ self.weight + self.bias)
         return x @ self.weight + self.bias
 
     def backward(self, dl_ds):
@@ -242,10 +215,7 @@ class Linear:
         dl_dx = dl_ds @ self.weight.transpose(0,1)
         self.dl_dw_cumulative += self.input_previous.transpose(0,1) @ dl_ds
         self.dl_db_cumulative += dl_ds.sum(0)
-        
-        #print(self.dl_db_cumulative.size())
-        #print(self.dl_dw_cumulative.size())
-        print('backward',dl_dx)
+      
         return dl_dx
 
     def update_param(self, eta):
@@ -256,4 +226,32 @@ class Linear:
         self.dl_dw_cumulative.fill_(0)
         self.dl_db_cumulative.fill_(0)
 
-#%%
+class CrossEntropyLoss():
+    def __init__(self):
+        self.loss = None
+
+    def __call__(self, output, target): 
+        '''
+            Both output and target must satisfy .view(-1,"size of sample")
+            Returns a list of 2 tensors [loss dloss] 
+        '''
+        self.loss = self.eval(output, target)
+        self.dloss = self.evald(output, target)
+        return [self.loss, self.dloss]
+
+    def softmax(self, T):
+        exps = torch.exp(T) # - torch.max(T, 1)[0].view(-1,1))
+        return exps/torch.sum(exps,1).view(-1,1)
+    
+    def eval(self, output, target):
+        proba = self.softmax(output)
+        n_sample = target.shape[0]
+        log_likelihood = -torch.log(proba[range(n_sample), target.type(torch.LongTensor).view(1,-1)])
+        return torch.sum(log_likelihood) / n_sample
+
+    def evald(self, output, target):
+        proba = self.softmax(output)
+        n_sample = target.shape[0]
+        proba[range(n_sample),target.type(torch.LongTensor)] -= 1
+        return proba /n_sample
+

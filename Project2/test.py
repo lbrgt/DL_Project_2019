@@ -28,16 +28,15 @@ model = DLModule(
 )
 
 # Display its architecture
-#print(model)
+print(model)
 
 # Display its parmeters
 model.displayParameters()
-#%%
+
 
 # Visualize the model's initial behaviour 
 showBehaviour = lambda model,input: dg.plotDataset(input,model(input).argmax(1).view(-1)) 
 
-#%%
 # Define a loss -Has to be instantiated only once
 criterion = LossMSE() # OPTION: CrossEntropyLoss()
 

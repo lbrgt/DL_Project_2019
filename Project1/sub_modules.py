@@ -1,12 +1,9 @@
 # https://pytorch.org/tutorials/beginner/pytorch_with_examples.html
 
-import agtree2dot as ag 
-
-#%%
 import sys
 import os
-sys.path.append(os.getcwd()+'/Project1/')
-#%%
+#sys.path.append(os.getcwd()+'/Project1/')
+
 
 import torch
 from torch.autograd import Variable

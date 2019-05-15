@@ -3,7 +3,7 @@ import sys
 import os
 import time
 
-sys.path.append(os.getcwd()+'/Project2/')
+#sys.path.append(os.getcwd()+'/Project2/')
 
 import torch
 from NeuralNet import DLModule, CrossEntropyLoss, LossMSE, Tanh, Sigmoid, Relu, Linear, SGDOptimizer, AdamOptimizer

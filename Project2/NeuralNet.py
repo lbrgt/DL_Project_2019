@@ -7,7 +7,7 @@ class SGDOptimizer:
         Stochastic Gradient Descent Optimizer update the weight and bias of the corresponding layers.
         The learning rate, momentum and decay rate can be defined. 
     ''' 
-    def __init__(self, learning_rate=0.01, momentum= 0.9, decay = 0.0):
+    def __init__(self, learning_rate=0.01, momentum= 0.5, decay = 0.01):
 
         self.layer_memory = dict() # Store previous cumulative gradient
         self.learning_rate = learning_rate
@@ -46,7 +46,7 @@ class AdamOptimizer:
         self.step_size = step_size
         self.epsilon = epsilon
 
-    def __call__(self, layer):
+    def __call__(self, layer, epoch):
 
         # Concatenate to ease the computation       
         g = torch.cat([layer.dl_dw_cumulative, layer.dl_db_cumulative],0)
@@ -290,7 +290,7 @@ class CrossEntropyLoss():
     def __call__(self, output, target): 
         '''
             Both output and target must satisfy .view(-1,"size of sample")
-            The "target" tensor has to contain the label [0, nbr_class-1].
+                    The "target" tensor has to contain the label [0, nbr_class-1].
             Returns a list of 2 tensors [loss dloss] 
         '''
         self.loss = self.eval(output, target)
@@ -312,4 +312,3 @@ class CrossEntropyLoss():
         n_sample = target.shape[0]
         proba[range(n_sample),target.type(torch.LongTensor)] -= 1
         return proba
-

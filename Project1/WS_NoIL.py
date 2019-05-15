@@ -39,7 +39,7 @@ class Net(nn.Module):
         x1 = x[:,0,:,:].view(-1,1,14,14)
         x2 = x[:,1,:,:].view(-1,1,14,14)
 
-        # No weight sharing (declare 2 distinct instances of Parallel_Net)
+        # Weight sharing (same instance of Parallel_Net)
         x1 = self.parallel_net(x1)
         x2 = self.parallel_net(x2)
 

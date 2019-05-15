@@ -52,7 +52,6 @@ def trainClassIdentifier(model, train_input, train_classes, mini_batch_size):
                 loss.backward()
 
             optimizer.step()
-        #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
         loss_record.append(sum_loss)
     
@@ -105,7 +104,6 @@ def trainAnalyzer(model, train_classes, train_target, mini_batch_size):
             '''for p in model.parameters():
                 p.data.sub_(eta * p.grad.data)'''
         loss_record.append(sum_loss)
-        #return
         print('Sum of loss at epoch {}: \t'.format(e),sum_loss)
     
     return model, loss_record

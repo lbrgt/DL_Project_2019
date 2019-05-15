@@ -77,7 +77,7 @@ class DLModule:
         Main module which embeds the structure of the neural network and provide function to deal with it. Can proccess batch of sample.
     '''  
 
-    def __init__(self, *layer, optimizer = SGDOptimizer()):
+    def __init__(self, *layer, op   mizer()):
         self.layer = []
         self.optimizer = optimizer
         if layer :

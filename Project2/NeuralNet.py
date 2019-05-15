@@ -3,7 +3,7 @@ import math
 #%%
 
 class SGDOptimizer:
-    '''
+    '''ww
         Stochastic Gradient Descent Optimizer update the weight and bias of the corresponding layers.
         The learning rate, momentum and decay rate can be defined. 
     ''' 
@@ -178,6 +178,41 @@ class LossMSE:
     def evald(self, output, target):
         return 2*(output-target)    
 
+class CrossEntropyLoss():
+    '''
+        Implement the Cross entropy Loss. 
+        Compute loss and the derivative of it to backpropagate.  
+    '''
+    def __init__(self):
+        self.loss = None
+        self.dloss = None
+
+    def __call__(self, output, target): 
+        '''
+            Both output and target must satisfy .view(-1,"size of sample")
+                    The "target" tensor has to contain the label [0, nbr_class-1].
+            Returns a list of 2 tensors [loss dloss] 
+        '''
+        self.loss = self.eval(output, target)
+        self.dloss = self.evald(output, target)
+        return [self.loss, self.dloss]
+
+    def softmax(self, T):
+        exps = torch.exp(T - torch.max(T, 1)[0].view(-1,1)) # Avoid log extrema
+        return exps/torch.sum(exps,1).view(-1,1)
+    
+    def eval(self, output, target):
+        proba = self.softmax(output)
+        n_sample = target.shape[0]
+        log_likelihood = -torch.log(proba[range(n_sample), target.type(torch.LongTensor).view(1,-1)])
+        return torch.sum(log_likelihood) / n_sample
+
+    def evald(self, output, target):
+        proba = self.softmax(output)
+        n_sample = target.shape[0]
+        proba[range(n_sample),target.type(torch.LongTensor)] -= 1
+        return proba
+
 class Tanh: 
     '''
         Implement tanh activation function. Implement forward() and backward().
@@ -278,37 +313,4 @@ class Linear:
         self.dl_dw_cumulative.fill_(0)
         self.dl_db_cumulative.fill_(0)
 
-class CrossEntropyLoss():
-    '''
-        Implement the Cross entropy Loss. 
-        Compute loss and the derivative of it to backpropagate.  
-    '''
-    def __init__(self):
-        self.loss = None
-        self.dloss = None
 
-    def __call__(self, output, target): 
-        '''
-            Both output and target must satisfy .view(-1,"size of sample")
-                    The "target" tensor has to contain the label [0, nbr_class-1].
-            Returns a list of 2 tensors [loss dloss] 
-        '''
-        self.loss = self.eval(output, target)
-        self.dloss = self.evald(output, target)
-        return [self.loss, self.dloss]
-
-    def softmax(self, T):
-        exps = torch.exp(T - torch.max(T, 1)[0].view(-1,1)) # Avoid log extrema
-        return exps/torch.sum(exps,1).view(-1,1)
-    
-    def eval(self, output, target):
-        proba = self.softmax(output)
-        n_sample = target.shape[0]
-        log_likelihood = -torch.log(proba[range(n_sample), target.type(torch.LongTensor).view(1,-1)])
-        return torch.sum(log_likelihood) / n_sample
-
-    def evald(self, output, target):
-        proba = self.softmax(output)
-        n_sample = target.shape[0]
-        proba[range(n_sample),target.type(torch.LongTensor)] -= 1
-        return proba

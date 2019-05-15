@@ -22,15 +22,13 @@ model = DLModule(
     Relu(),
     Linear(25,25),
     Relu(),
-    Linear(25,25),
-    Relu(),
     Linear(25,2),
     Sigmoid(),
     optimizer= SGDOptimizer(learning_rate=0.01, momentum= 0.5, decay=0.01) # AdamOptimizer( beta_1=0.9, beta_2=0.99, step_size=0.001, epsilon=0.0000001) 
 )
 
 # Display its architecture
-print(model)
+#print(model)
 
 # Display its parmeters
 model.displayParameters()

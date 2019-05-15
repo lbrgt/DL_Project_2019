@@ -23,10 +23,6 @@ Definition of the corresponding training function, test of the resulting net.
 '''
 ####################################################################################################
 
-# Load the dataset
-nb = 1000
-train_input, train_target, train_classes, test_input, test_target, test_classes = prologue.generate_pair_sets(nb)
-
 
 class Net(nn.Module):
     def __init__(self):
@@ -123,6 +119,10 @@ def main():
     #Define the weighting between the losses
     w=0.8
   
+    # Load the dataset
+    nb = 1000
+    train_input, train_target, train_classes, test_input, test_target, test_classes = prologue.generate_pair_sets(nb)
+
     # Create an instance of the network
     basicModel = Net()
     num_param = sum(p.numel() for p in basicModel.parameters() if p.requires_grad)

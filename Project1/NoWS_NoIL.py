@@ -23,10 +23,6 @@ Definition of the corresponding training function, test of the resulting net.
 '''
 ####################################################################################################
 
-# Load the dataset
-nb = 1000
-train_input, train_target, train_classes, test_input, test_target, test_classes = prologue.generate_pair_sets(nb)
-
 
 class Net(nn.Module):
     def __init__(self):
@@ -101,8 +97,13 @@ def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
     return error/test_target.size(0)*100    
 
 def main():
-    # Define the mini_batch size 
+    # Define the mini_batch size
     mini_batch_size = 100
+
+
+    # Load the dataset
+    nb = 1000
+    train_input, train_target, train_classes, test_input, test_target, test_classes = prologue.generate_pair_sets(nb)
 
     # Create an instance of the network
     basicModel = Net()

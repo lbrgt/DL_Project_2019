@@ -101,7 +101,7 @@ def evaluateFinalOutput(model, test_input, test_target, mini_batch_size):
     return error/test_target.size(0)*100    
 
 def main():
-    # Define the mini_batch size (A PLACER DANS LE MASTER)
+    # Define the mini_batch size 
     mini_batch_size = 100
 
     # Create an instance of the network

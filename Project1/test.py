@@ -2,7 +2,7 @@
     This file automatically trains and runs all networks and collects data about each configuration. 
     It then generates some figures illustrating the performance of the different architectures. 
     
-    usage: Master.py [-h] [-t] [-s] [-l]
+    usage: test.py [-h] [-t] [-s] [-l]
     optional arguments:
         -h, --help     show this help message and exit
         -t, --trained  use pretrained networks

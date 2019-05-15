@@ -26,7 +26,7 @@ model = DLModule(
     Relu(),
     Linear(25,2),
     Sigmoid(),
-    optimizer=SGDOptimizer(learning_rate=0.01, momentum= 0.5, decay=0.1) # OPTION: AdamOptimizer()
+    optimizer= SGDOptimizer(learning_rate=0.01, momentum= 0.5, decay=0.01) # AdamOptimizer( beta_1=0.9, beta_2=0.99, step_size=0.001, epsilon=0.0000001) 
 )
 
 # Display its architecture
@@ -41,19 +41,19 @@ showBehaviour = lambda model,input: dg.plotDataset(input,model(input).argmax(1).
 
 #%%
 # Define a loss -Has to be instantiated only once
-criterion = LossMSE() # OPTION: CrossEntropyLoss()
+criterion = CrossEntropyLoss() # OPTION: CrossEntropyLoss()
 
 # Convert the target generated with label into a one hot encoded vector for the MSE Loss
 train_target
-train_target_OH = torch.empty((train_target.shape[0],int(train_target.max().item()+1))).fill_(0.)
-train_target_OH[range(train_target.shape[0]), train_target.type(torch.LongTensor)] = 1
+#train_target_OH = torch.empty((train_target.shape[0],int(train_target.max().item()+1))).fill_(0.)
+#train_target_OH[range(train_target.shape[0]), train_target.type(torch.LongTensor)] = 1
 
 input("Press enter to continue")
 
 # Train the network
 # The syntax is as close as possible as pytorch
-epochs = 200
-mini_batch_size = 200
+epochs = 100
+mini_batch_size = 100
 
 start = time.time()
 for e in range(epochs):
@@ -62,7 +62,7 @@ for e in range(epochs):
     for b in range(0, train_input.size(0), mini_batch_size):
 
         output = model(train_input.narrow(0, b, mini_batch_size))
-        loss = criterion(output, train_target_OH.narrow(0, b, mini_batch_size))
+        loss = criterion(output, train_target.narrow(0, b, mini_batch_size))
         sum_loss = sum_loss + loss[0].item()
         model.zero_grad()
         model.backward(loss)
